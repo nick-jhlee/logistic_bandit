@@ -1,5 +1,25 @@
-Code for the paper [_Jointly Efficient and Optimal Algorithms for Logistic Bandits_](https://arxiv.org/pdf/2201.01985.pdf), by [Louis Faury](https://www.louisfaury.com), Marc Abeille, Clément Calauzènes and [Kwang-Sung Jun](https://kwangsungjun.github.io).
+Code for the paper [_Improved Regret Bounds of (Multinomial) Logistic Bandits via Regret-to-Confidence-Set Conversion_](https://arxiv.org/abs/2310.18554) (AISTATS 2024), by [Junghyun Lee](https://nick-jhlee.github.io/), [Se-Young Yun](https://fbsqkd.github.io/), and [Kwang-Sung Jun](https://kwangsungjun.github.io).
 
+This is forked from https://github.com/criteo-research/logistic_bandit.
+
+If you plan to use this repository or cite our paper, please use the following bibtex format:
+
+```latex
+@InProceedings{lee2024logistic,
+	title = 	 {{Improved Regret Bounds of (Multinomial) Logistic Bandits via Regret-to-Confidence-Set Conversion}},
+	author =       {Junghyun Lee and Se-Young Yun and Kwang-Sung Jun},
+	booktitle = 	 {Proceedings of The 26th International Conference on Artificial Intelligence and Statistics},
+	pages = 	 {},
+	year = 	 {2024},
+	editor = 	 {},
+	volume = 	 {238},
+	series = 	 {Proceedings of Machine Learning Research},
+	month = 	 {02--04 May},
+	publisher =    {PMLR},
+	pdf = 	 {https://arxiv.org/pdf/2310.18554.pdf},
+	url = 	 {https://arxiv.org/abs/2310.18554},
+}
+```
 
 # Install
 Clone the repository and run:
@@ -9,13 +29,15 @@ $ pip install .
 
 # Usage
 
-This code implements the `adaECOLog` algorithms (OFU and TS variants) - both from the aforedmentioned paper, along with several baselines (oldest to newest):
+This code implements the `OFULog+` algorithm, along with several baselines (oldest to newest):
 
 - `GLM-UCB` from [Filippi et al. 2010](https://papers.nips.cc/paper/2010/file/c2626d850c80ea07e7511bbae4c76f4b-Paper.pdf),
 - `OL2M` from [Zhang et al. 2016](http://proceedings.mlr.press/v48/zhangb16.pdf),
 - `GLOC` from [Jun et al. 2017](https://proceedings.neurips.cc/paper/2017/file/28dd2c7955ce926456240b2ff0100bde-Paper.pdf),
 - `LogUCB1` from [Faury et al. 2020](http://proceedings.mlr.press/v119/faury20a/faury20a.pdf),
 - `OFULog-r` from [Abeille et al. 2021](http://proceedings.mlr.press/v130/abeille21a/abeille21a.pdf).
+- `ada-OFU-ECOLog` from [Faury et al. 2022](https://proceedings.mlr.press/v151/faury22a.html)
+- `ada-OFU-ECOLog-TS` from [Faury et al. 2022](https://proceedings.mlr.press/v151/faury22a.html)
 
 
 Experiments can be ran for several Logistic Bandit (_i.e_ structured Bernoulli feedback) environments, such as static and time-varying finite arm-sets, or inifinite arm-sets (_e.g._ unit ball).
