@@ -10,13 +10,14 @@ from logbexp.regret_routines import many_bandit_exps
 
 def run(config_path):
     msg = "Currently treating: {}".format(config_path)
-    if 'OFULog-r' in config_path:
+    if 'OFULog' in config_path:
         msg += f"\033[95m (warning, this algorithm is slooooow.)\033[95m"
     print(msg)
     config = json.load(open(os.path.join(configs_path, config_path), 'r'))
-    mean_cum_regret = many_bandit_exps(config)
-    log_path = os.path.join(logs_dir, 'h{}d{}a{}n{}'.format(config["horizon"], config["dim"], config["algo_name"],
-                                                            config['norm_theta_star']))
+    mean_cum_regret, kappa = many_bandit_exps(config)
+    print("kappa = ", kappa)
+    log_path = os.path.join(logs_dir, 'h{}d{}a{}n{}t{}'.format(config["horizon"], config["dim"], config["algo_name"],
+                                                            config['norm_theta_star'], config['arm_set_type']))
     log_dict = config
     log_dict["cum_regret"] = mean_cum_regret.tolist()
     with open(log_path, 'w') as f:

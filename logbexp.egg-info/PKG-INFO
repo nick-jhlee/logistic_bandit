@@ -1,3 +1,19 @@
+Metadata-Version: 2.1
+Name: logbexp
+Version: 1.0
+Summary: Logistic Bandit Experiments
+Home-page: https://github.com/nick-jhlee/logistic_bandit
+Author: Junghyun Lee and Louis Faury
+Author-email: jh_lee00@kaist.ac.kr, l.faury@hotmail.fr
+License: Apache License 2.0
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: numpy
+Requires-Dist: matplotlib
+Requires-Dist: joblib
+Requires-Dist: scipy>=1.5.2
+Requires-Dist: pandas
+
 Code for the paper [_Improved Regret Bounds of (Multinomial) Logistic Bandits via Regret-to-Confidence-Set Conversion_](https://arxiv.org/abs/2310.18554) (AISTATS 2024), by [Junghyun Lee](https://nick-jhlee.github.io/), [Se-Young Yun](https://fbsqkd.github.io/), and [Kwang-Sung Jun](https://kwangsungjun.github.io).
 
 This is forked from https://github.com/criteo-research/logistic_bandit.
@@ -26,11 +42,10 @@ Clone the repository and run:
 ```shell
 $ pip install .
 ```
-Every time one changes the source code, one should run `pip install .` again to update the package.
 
 # Usage
 
-This code implements the `OFULog+` algorithm of [Lee et al. 2024](https://arxiv.org/abs/2310.18554), along with several baselines (oldest to newest):
+This code implements the `OFULog+` algorithm, along with several baselines (oldest to newest):
 
 - `GLM-UCB` from [Filippi et al. 2010](https://papers.nips.cc/paper/2010/file/c2626d850c80ea07e7511bbae4c76f4b-Paper.pdf),
 - `OL2M` from [Zhang et al. 2016](http://proceedings.mlr.press/v48/zhangb16.pdf),
@@ -41,12 +56,12 @@ This code implements the `OFULog+` algorithm of [Lee et al. 2024](https://arxiv.
 - `ada-OFU-ECOLog-TS` from [Faury et al. 2022](https://proceedings.mlr.press/v151/faury22a.html)
 
 
-Experiments can be run for several Logistic Bandit (_i.e_ structured Bernoulli feedback) environments, such as static and time-varying finite arm-sets, or inifinite arm-sets (_e.g._ unit ball).
-Note that the Thompson Sampling type algorithm (TS) is only available for `GLOC`, `OL2M`, `GLM-UCB`, and `ada-OFU-ECOLog-TS`.
-For the first three algorithms, TS is automatically triggered for unit ball arm-set.
+Experiments can be ran for several Logistic Bandit (_i.e_ structured Bernoulli feedback) environments, such as static and time-varying finite arm-sets, or inifinite arm-sets (_e.g._ unit ball).
+
+![regret_fig](./regret_fig.png)
 
 ## Single Experiment 
-Single experiments (one algorithm for one environment) can be run thanks to `scripts/run_example.py`. The script instantiate the algorithm and environment indicated in the file `scripts/configs/example_config.py` and plots the regret.
+Single experiments (one algorithm for one environment) can be ran thanks to `scripts/run_example.py`. The script instantiate the algorithm and environment indicated in the file `scripts/configs/example_config.py` and plots the regret.
 
 ## Benchmark
 Benchmarks can be obtained thanks to `scripts/run_all.py`. This script runs experiments for any config file in `scripts/configs/generated_configs/` and stores the result in `scripts/logs/`. 
@@ -57,29 +72,29 @@ Benchmarks can be obtained thanks to `scripts/run_all.py`. This script runs expe
 You can use `scripts/plot_regret.py` to plot regret curves. This scripts plot regret curves for all logs in `scripts/logs/` that match the indicated dimension and parameter norm. 
 
 ```
-usage: plot_regret.py [-h] [-d [D]] [-hz [HZ]] [-ast [AST]] [-pn [PN]]
+usage: plot_regret.py [-h] [-d [D]] [-pn [PN]]
 
-Plot regret curves
+Plot regret curves (by default for dimension=2 and parameter norm=3)
 
 optional arguments:
   -h, --help  show this help message and exit
   -d [D]      Dimension (default: 2)
-  -hz [HZ]    Horizon length (default: 4000)
-  -ast [AST]  Dimension (default: fixed_discrete)
-  -pn [PN]    Parameter norm (default: 1.0)
+  -pn [PN]    Parameter norm (default: 4.0)
 ```
 
-Example output:
-
-<img src="./regret_fig.png" width="500" alt="">
-
-
 ### Confidence sets
-You can use `scripts/plot_confidence.ipynb` to plot the confidence sets for `OFULog-r`, `ada-OFU-ECOLog`, and `OFULog+`.
+You can use `scripts/plot_regret.py` to plot regret curves. This scripts plot regret curves for all logs in `scripts/logs/` that match the indicated dimension and parameter norm. 
 
-Example output (S=10):
+```
+usage: plot_regret.py [-h] [-d [D]] [-pn [PN]]
 
-<img src="./confidence_fig.png" width="500" alt="">
+Plot regret curves (by default for dimension=2 and parameter norm=3)
+
+optional arguments:
+  -h, --help  show this help message and exit
+  -d [D]      Dimension (default: 2)
+  -pn [PN]    Parameter norm (default: 4.0)
+```
 
 
 ## Generating configs 

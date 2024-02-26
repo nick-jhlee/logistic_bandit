@@ -13,12 +13,14 @@ parser = argparse.ArgumentParser(description='Automatically creates configs, sto
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-dims', nargs='+', type=int, help='Dimension')
 parser.add_argument('-pn', nargs='+', type=float, help='Parameter norm (||theta_star||)')
-parser.add_argument('-algos', type=str, nargs='+', help='Algorithms. Possibilities include GLM-UCB, LogUCB1, OFULog-r, OL2M, GLOC or adaECOLog')
+parser.add_argument('-algos', type=str, nargs='+', help='Algorithms. Possibilities include GLM-UCB, LogUCB1, OFULog-r, OL2M, GLOC, adaECOLog, or OFULogPlus')
 parser.add_argument('-r', type=int, nargs='?', default=20, help='# of independent runs')
 parser.add_argument('-hz', type=int, nargs='?', default=1000, help='Horizon, normalized (later multiplied by sqrt(dim))')
 parser.add_argument('-ast', type=str, nargs='?', default='fixed_discrete', help='Arm set type. Must be either fixed_discrete, tv_discrete or ball')
 parser.add_argument('-ass', type=int, nargs='?', default='10', help='Arm set size, normalized (later multiplied by dim)')
 parser.add_argument('-fl', type=float, nargs='?', default=0.05, help='Failure level, must be in (0,1)')
+parser.add_argument('-plotconfidence', type=bool, nargs='?', default=False, help='Plot the confidence set?')
+parser.add_argument('-Nconfidence', type=int, nargs='?', default=500, help='Number of discretizations (per axis) for confidence set plot')
 args = parser.parse_args()
 
 # set args (no sanity check, please read the doc)
@@ -30,6 +32,8 @@ failure_level = args.fl
 dims = np.array(args.dims)
 param_norm = np.array(args.pn)
 algos = args.algos
+plot_confidence = (args.plotconfidence in ["True", "true"])
+N_confidence = args.Nconfidence
 
 # create right config directory
 here = os.path.dirname(os.path.abspath(__file__))
@@ -46,11 +50,12 @@ for d in dims:
         for algo in algos:
             theta_star = pn / np.sqrt(d) * np.ones([d])
             pn_ub = pn + 1 # parameter upper-bound (S = ||theta_star|| + 1)
-            config_path = os.path.join(config_dir, 'h{}d{}a{}n{}.json'.format(horizon, d, algo, pn))
+            config_path = os.path.join(config_dir, 'h{}d{}a{}n{}t{}.json'.format(horizon, d, algo, pn, arm_set_type))
             config_dict = {"repeat": int(repeat), "horizon": int(np.ceil(np.sqrt(d))*horizon), "dim": int(d),
                            "algo_name": algo, "theta_star": theta_star.tolist(), "param_norm_ub": int(pn_ub),
                            "failure_level": float(failure_level), "arm_set_type": arm_set_type,
-                           "arm_set_size": int(d*arm_set_size), "arm_norm_ub": 1, "norm_theta_star": float(pn)}
+                           "arm_set_size": int(d*arm_set_size), "arm_norm_ub": 1, "norm_theta_star": float(pn),
+                           "plot_confidence": bool(plot_confidence), "N_confidence": int(N_confidence)}
 
             with open(config_path, 'w') as f:
                 json.dump(config_dict, f)

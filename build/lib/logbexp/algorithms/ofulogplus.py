@@ -1,22 +1,13 @@
-import numpy as np
-
-from logbexp.algorithms.logistic_bandit_algo import LogisticBandit
-from numpy.linalg import slogdet
-from logbexp.utils.utils import sigmoid
-from scipy.optimize import minimize, NonlinearConstraint
-from scipy.stats import chi2
-
 """
-Class for the OFULog-r algorithm of [Abeille et al. 2021]. Inherits from the LogisticBandit class.
+Created on 10/22/23
+@author: nicklee
+
+Class for the OFULog+ of [Lee et al., AISTATS'24]. Inherits from the LogisticBandit class.
 
 Additional Attributes
 ---------------------
 lazy_update_fr : int
     integer dictating the frequency at which to do the learning if we want the algo to be lazy
-l2_reg: float
-    ell-two regularization of maximum-likelihood problem (lambda)
-hessian_matrix: np.array(dim x dim)
-    hessian of the log-loss at current estimation (H_t)   
 theta_hat : np.array(dim)
     maximum-likelihood estimator
 log_loss_hat : float
@@ -24,19 +15,23 @@ log_loss_hat : float
 ctr : int
     counter for lazy updates
 """
+import numpy as np
+import matplotlib.pyplot as plt
+
+from logbexp.algorithms.logistic_bandit_algo import LogisticBandit
+from logbexp.utils.utils import sigmoid
+from scipy.optimize import minimize, NonlinearConstraint
 
 
-class OFULogr(LogisticBandit):
+class OFULogPlus(LogisticBandit):
     def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, lazy_update_fr=1, plot_confidence=False, N_confidence=500):
         """
         :param lazy_update_fr:  integer dictating the frequency at which to do the learning if we want the algo to be lazy (default: 1)
         """
         super().__init__(param_norm_ub, arm_norm_ub, dim, failure_level)
-        self.name = 'OFULog-r'
+        self.name = 'OFULogPlus'
         self.lazy_update_fr = lazy_update_fr
         # initialize some learning attributes
-        self.l2reg = self.dim
-        self.hessian_matrix = self.l2reg * np.eye(self.dim)
         self.theta_hat = np.random.normal(0, 1, (self.dim,))
         self.ctr = 0
         self.ucb_bonus = 0
@@ -51,7 +46,6 @@ class OFULogr(LogisticBandit):
         """
         Resets the underlying learning algorithm
         """
-        self.hessian_matrix = self.l2reg * np.eye(self.dim)
         self.theta_hat = np.random.normal(0, 1, (self.dim,))
         self.ctr = 1
         self.arms = []
@@ -64,25 +58,15 @@ class OFULogr(LogisticBandit):
         self.arms.append(arm)
         self.rewards.append(reward)
 
-        # learn the m.l.e by iterative approach (a few steps of Newton descent)
-        self.l2reg = self.dim * np.log(2 + len(self.rewards))
+        # norm-constrained convex optim for MLE
         if self.ctr % self.lazy_update_fr == 0 or len(self.rewards) < 200:
-            ## scipy
+            # if lazy we learn with a reduced frequency
             obj = lambda theta: self.logistic_loss(theta)
-            opt = minimize(obj, x0=self.theta_hat, method='SLSQP')
+            cstrf_norm = lambda theta: np.linalg.norm(theta)
+            constraint_norm = NonlinearConstraint(cstrf_norm, 0, self.param_norm_ub)
+            opt = minimize(obj, x0=self.theta_hat, method='SLSQP', constraints=[constraint_norm])
+            # , options={'maxiter': 20}
             self.theta_hat = opt.x
-
-            ## previously: learn the m.l.e by iterative approach (a few steps of Newton descent)
-            # theta_hat = self.theta_hat
-            # for _ in range(5):
-            #     coeffs = sigmoid(np.dot(self.arms, theta_hat)[:, None])
-            #     y = coeffs - np.array(self.rewards)[:, None]
-            #     grad = self.l2reg * theta_hat + np.sum(y * self.arms, axis=0)
-            #     hessian = np.dot(np.array(self.arms).T,
-            #                      coeffs * (1 - coeffs) * np.array(self.arms)) + self.l2reg * np.eye(self.dim)
-            #     theta_hat -= np.linalg.solve(hessian, grad)
-            # self.theta_hat = theta_hat
-            # self.hessian_matrix = hessian
         # update counter
         self.ctr += 1
 
@@ -93,24 +77,10 @@ class OFULogr(LogisticBandit):
         return arm
 
     def update_ucb_bonus(self):
-        """
-        Updates the ucb bonus function (refined concentration result from Faury et al. 2020)
-        """
-        _, logdet = slogdet(self.hessian_matrix)
-        gamma_1 = np.sqrt(self.l2reg)*(0.5 + self.param_norm_ub) + (2 / np.sqrt(self.l2reg)) \
-                  * (np.log(1 / self.failure_level) + 0.5 * logdet - 0.5 * self.dim * np.log(self.l2reg) +
-                     np.log(chi2(self.dim).cdf(2 * self.l2reg) / chi2(self.dim).cdf(self.l2reg)))
-        gamma_2 = np.sqrt(self.l2reg)*self.param_norm_ub + np.log(1 / self.failure_level) \
-                  + np.log(chi2(self.dim).cdf(2 * self.l2reg) / chi2(self.dim).cdf(self.l2reg)) \
-                  + 0.5 * logdet - 0.5 * self.dim * np.log(self.l2reg)
-        gamma = np.min([gamma_1, gamma_2])
-        res = (gamma + gamma ** 2 / self.l2reg) ** 2
-        self.ucb_bonus = res
+        self.ucb_bonus = 10 * self.dim * np.log(np.e + (self.param_norm_ub * len(self.rewards) / (2 * self.dim))) + 2 * (
+                    np.e - 2 + self.param_norm_ub) * np.log(1 / self.failure_level)
 
     def compute_optimistic_reward(self, arm):
-        """
-        Planning according to Algo. 2 of Abeille et al. 2021
-        """
         if self.ctr == 1:
             res = np.random.normal(0, 1)
         else:
@@ -120,7 +90,7 @@ class OFULogr(LogisticBandit):
             constraint = NonlinearConstraint(cstrf, 0, self.ucb_bonus)
             constraint_norm = NonlinearConstraint(cstrf_norm, 0, self.param_norm_ub)
             opt = minimize(obj, x0=self.theta_hat, method='SLSQP', constraints=[constraint, constraint_norm])
-            # options={'maxiter': 20}
+            # , options={'maxiter': 20}
             res = np.sum(arm * opt.x)
 
             ## plot confidence set
@@ -131,22 +101,21 @@ class OFULogr(LogisticBandit):
                 f = lambda x, y: self.logistic_loss_seq(np.array([x, y])) - self.log_loss_hat
                 z = (f(x, y) <= self.ucb_bonus) & (np.linalg.norm(np.array([x, y]), axis=0) <= self.param_norm_ub)
                 z = z.astype(int)
-                np.savez(f"S={self.param_norm_ub}/OFULogr.npz", x=x, y=y, z=z, theta_hat=self.theta_hat)
+                np.savez(f"S={self.param_norm_ub}/OFULogPlus.npz", x=x, y=y, z=z, theta_hat=self.theta_hat)
         return res
 
     def logistic_loss(self, theta):
         """
         Computes the full log-loss estimated at theta
         """
-        res = self.l2reg / 2 * np.linalg.norm(theta)**2
+        res = 0
         if len(self.rewards) > 0:
-            coeffs = np.clip(sigmoid(np.dot(self.arms, theta)[:, None]), 1e-12, 1-1e-12)
+            coeffs = np.clip(sigmoid(np.dot(self.arms, theta)[:, None]), 1e-12, 1 - 1e-12)
             res += -np.sum(np.array(self.rewards)[:, None] * np.log(coeffs / (1 - coeffs)) + np.log(1 - coeffs))
         return res
 
     def logistic_loss_seq(self, theta):
-        res = self.l2reg / 2 * np.linalg.norm(theta, axis=0)**2
-        res = res.reshape((1, self.N, self.N))
+        res = 0
         for s, r in enumerate(self.rewards):
             mu_s = 1 / (1 + np.exp(-np.tensordot(self.arms[s].reshape((self.dim,1)), theta, axes=([0], [0]))))
             mu_s = np.clip(mu_s, 1e-12, 1 - 1e-12)
