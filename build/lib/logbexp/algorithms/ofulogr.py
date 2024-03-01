@@ -124,7 +124,7 @@ class OFULogr(LogisticBandit):
             res = np.sum(arm * opt.x)
 
             ## plot confidence set
-            if self.plot and len(self.rewards) == 1000:
+            if self.plot and len(self.rewards) == 4000:
                 ## store data
                 interact_rng = np.linspace(-self.param_norm_ub-0.5, self.param_norm_ub+0.5, self.N)
                 x, y = np.meshgrid(interact_rng, interact_rng)

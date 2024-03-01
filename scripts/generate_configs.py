@@ -19,7 +19,7 @@ parser.add_argument('-hz', type=int, nargs='?', default=1000, help='Horizon, nor
 parser.add_argument('-ast', type=str, nargs='?', default='fixed_discrete', help='Arm set type. Must be either fixed_discrete, tv_discrete or ball')
 parser.add_argument('-ass', type=int, nargs='?', default='10', help='Arm set size, normalized (later multiplied by dim)')
 parser.add_argument('-fl', type=float, nargs='?', default=0.05, help='Failure level, must be in (0,1)')
-parser.add_argument('-plotconfidence', type=bool, nargs='?', default=False, help='Plot the confidence set?')
+parser.add_argument('-plotconfidence', type=str, nargs='?', default=False, help='Plot the confidence set?')
 parser.add_argument('-Nconfidence', type=int, nargs='?', default=500, help='Number of discretizations (per axis) for confidence set plot')
 args = parser.parse_args()
 

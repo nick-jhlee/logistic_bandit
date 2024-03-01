@@ -29,7 +29,7 @@ parser = argparse.ArgumentParser(description='Plot regret curves, by default for
 parser.add_argument('-d', type=int, nargs='?', default=2, help='Dimension')
 parser.add_argument('-hz', type=int, nargs='?', default=4000, help='Horizon length)')
 parser.add_argument('-pn', type=float, nargs='?', default=1.0, help='Parameter norm')
-parser.add_argument('-ast', type=str, nargs='?', default='fixed_discrete', help='Arm set type. Must be either fixed_discrete, tv_discrete or ball')
+parser.add_argument('-ast', type=str, nargs='?', default='tv_discrete', help='Arm set type. Must be either fixed_discrete, tv_discrete or ball')
 args = parser.parse_args()
 
 d = args.d
@@ -40,7 +40,8 @@ print(r"Plotting regret curves for $d=${}, $H=${}, $\lVert \theta_\star \rVert_2
 
 
 # path to logs/
-logs_dir = f'logs/{arm_set_type}_h_{H}'
+# logs_dir = f'logs/{arm_set_type}_h_{H}'
+logs_dir = 'logs/'
 
 # accumulate results
 res_dict = dict()

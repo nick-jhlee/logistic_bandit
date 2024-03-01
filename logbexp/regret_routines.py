@@ -32,8 +32,16 @@ def many_bandit_exps(config):
     def run_bandit_exp(*args):
         return one_bandit_exp(config)
     # n_jobs=10
-    everything = Parallel(n_jobs=-1)(delayed(run_bandit_exp)(i) for i in range(config["repeat"]))
-    regret = [item[0] for item in everything]
-    kappa_invs = [item[1] for item in everything]
-    cum_regret = np.cumsum(regret, axis=1)
-    return np.mean(cum_regret, axis=0), np.mean(kappa_invs, axis=0)
+    if config['repeat'] > 1:
+        everything = Parallel(n_jobs=-1)(delayed(run_bandit_exp)(i) for i in range(config["repeat"]))
+        regret = [item[0] for item in everything]
+        kappa_invs = [item[1] for item in everything]
+        cum_regret = np.cumsum(regret, axis=1)
+        return np.mean(cum_regret, axis=0), np.mean(kappa_invs, axis=0)
+    else:
+        everything = one_bandit_exp(config)
+        regret = everything[0]
+        kappa_inv = everything[1]
+        cum_regret = np.cumsum(regret)
+        return cum_regret, kappa_inv
+    
