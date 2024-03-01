@@ -1,21 +1,20 @@
 """
 By @nick-jhlee
 
-usage: plot_confidence.py [-h] [-d [D]] [-hz [HZ]] [-ast [AST]] [-pn [PN]]
+usage: plot_confidence.py [-h] [-ast [AST]] [-pn [PN]] [-Nconfidence [N]]
 
 Plot confidence sets for all algorithms
 
 optional arguments:
-  -h, --help  show this help message and exit
-  -ast [AST]  Dimension (default: tv_discrete)
-  -pn [PN]    Parameter norm (default: 10.0)
+  -h, --help          show this help message and exit
+  -ast [AST]          Dimension (default: tv_discrete)
+  -pn [PN]            Parameter norm (default: 10.0)
+  -Nconfidence [N]    Number of discretizations (per axis) for confidence set plot (default: 5000)
 """
 
 import argparse
 import matplotlib.pyplot as plt
 import numpy as np
-import os
-import json
 import seaborn as sns
 
 from logbexp.utils.utils import dsigmoid
@@ -31,12 +30,12 @@ args = parser.parse_args()
 param_norm = args.pn
 S = int(param_norm + 1)
 arm_set_type = args.ast
-N_confidence = args.Nconfidence
+N = args.Nconfidence
 
 
 # basic quantities
 theta_star = np.array([(S - 1) / np.sqrt(2), (S - 1) / np.sqrt(2)])
-interact_rng = np.linspace(-S - 0.5, S + 0.5, N_confidence)
+interact_rng = np.linspace(-S - 0.5, S + 0.5, N)
 x, y = np.meshgrid(interact_rng, interact_rng)
 
 fnames = ["adaECOLog.npz","OFULogr.npz", "OFULogPlus.npz"]
@@ -60,6 +59,7 @@ else:
 
 # plotting
 plt.figure(1, figsize=(12,12))
+# with sns.axes_style("whitegrid"):
 for i, fname in enumerate(fnames):
     fname = f"S={S}/{arm_set_type}/{fname}"
     with np.load(fname) as data:
