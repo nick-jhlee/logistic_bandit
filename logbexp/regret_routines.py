@@ -37,11 +37,11 @@ def many_bandit_exps(config):
         regret = [item[0] for item in everything]
         kappa_invs = [item[1] for item in everything]
         cum_regret = np.cumsum(regret, axis=1)
-        return np.mean(cum_regret, axis=0), np.mean(kappa_invs, axis=0)
+        return np.mean(cum_regret, axis=0), np.std(cum_regret, axis=0), np.mean(kappa_invs, axis=0)
     else:
         everything = one_bandit_exp(config)
         regret = everything[0]
         kappa_inv = everything[1]
         cum_regret = np.cumsum(regret)
-        return cum_regret, kappa_inv
+        return cum_regret, np.zeros(cum_regret.shape), kappa_inv
     

@@ -26,11 +26,10 @@ ctr : int
 
 
 class EcoLog(LogisticBandit):
-    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, plot_confidence=False, N_confidence=500):
+    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, plot_confidence=False, N_confidence=500):
         super().__init__(param_norm_ub, arm_norm_ub, dim, failure_level)
         self.name = 'adaECOLog'
         self.l2reg = 10
-        # self.l2reg = 5    ## with this, you need to run the code for T > 10^4, which is excruciatingly slow
         self.vtilde_matrix = self.l2reg * np.eye(self.dim)
         self.vtilde_matrix_inv = (1 / self.l2reg) * np.eye(self.dim)
         self.theta = np.zeros((self.dim,))
@@ -39,6 +38,7 @@ class EcoLog(LogisticBandit):
         self.ctr = 1
         self.plot = plot_confidence
         self.N = N_confidence
+        self.T = horizon
 
     def reset(self):
         self.vtilde_matrix = self.l2reg * np.eye(self.dim)
@@ -119,7 +119,7 @@ class EcoLog(LogisticBandit):
         bonus = self.conf_radius * norm
 
         ## plot confidence set
-        if self.plot and self.ctr == 4000:
+        if self.plot and self.ctr == self.T - 2:
             ## store data
             interact_rng = np.linspace(-self.param_norm_ub-0.5, self.param_norm_ub+0.5, self.N)
             # Create meshgrid

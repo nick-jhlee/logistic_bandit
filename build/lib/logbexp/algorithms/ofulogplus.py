@@ -24,7 +24,7 @@ from scipy.optimize import minimize, NonlinearConstraint
 
 
 class OFULogPlus(LogisticBandit):
-    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, lazy_update_fr=1, plot_confidence=False, N_confidence=500):
+    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, lazy_update_fr=1, plot_confidence=False, N_confidence=500):
         """
         :param lazy_update_fr:  integer dictating the frequency at which to do the learning if we want the algo to be lazy (default: 1)
         """
@@ -41,6 +41,7 @@ class OFULogPlus(LogisticBandit):
         self.rewards = []
         self.plot = plot_confidence
         self.N = N_confidence
+        self.T = horizon
 
     def reset(self):
         """
@@ -94,7 +95,7 @@ class OFULogPlus(LogisticBandit):
             res = np.sum(arm * opt.x)
 
             ## plot confidence set
-            if self.plot and len(self.rewards) == 4000:
+            if self.plot and len(self.rewards) == self.T - 2:
                 ## store data
                 interact_rng = np.linspace(-self.param_norm_ub-0.5, self.param_norm_ub+0.5, self.N)
                 x, y = np.meshgrid(interact_rng, interact_rng)

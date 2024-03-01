@@ -10,7 +10,7 @@ optional arguments:
   -h, --help  show this help message and exit
   -d [D]      Dimension (default: 2)
   -hz [HZ]    Horizon length (default: 4000)
-  -ast [AST]  Dimension (default: fixed_discrete)
+  -ast [AST]  Dimension (default: tv_discrete)
   -pn [PN]    Parameter norm (default: 1.0)
 """
 
@@ -35,6 +35,7 @@ args = parser.parse_args()
 d = args.d
 H = args.hz
 param_norm = args.pn
+S = int(param_norm + 1)
 arm_set_type = args.ast
 print(r"Plotting regret curves for $d=${}, $H=${}, $\lVert \theta_\star \rVert_2=${}, and arm_set_type={}".format(d, H, param_norm, arm_set_type))
 
@@ -44,12 +45,15 @@ print(r"Plotting regret curves for $d=${}, $H=${}, $\lVert \theta_\star \rVert_2
 logs_dir = 'logs/'
 
 # accumulate results
-res_dict = dict()
+res_dict_mean = dict()
+res_dict_std = dict()
 for log_path in os.listdir(logs_dir):
-    with open(os.path.join(logs_dir, log_path), 'r') as data:
+    with open(os.path.join(logs_dir, log_path), 'r', encoding="utf8") as data:
         log_dict = json.load(data)
         # log_dict = json.load(open(os.path.join(logs_dir, log_path), 'r'))
-        log_cum_regret = np.array(log_dict["cum_regret"])
+
+        if "mean_cum_regret" not in log_dict.keys() or "std_cum_regret" not in log_dict.keys():
+            continue
 
         # eliminate logs with undesired dimension
         if not int(log_dict["dim"]) == d:
@@ -66,16 +70,17 @@ for log_path in os.listdir(logs_dir):
 
         algo = log_dict["algo_name"]
         print(algo)
-        res_dict[algo] = log_cum_regret
+        res_dict_mean[algo] = np.array(log_dict["mean_cum_regret"])
+        res_dict_std[algo] = np.array(log_dict["std_cum_regret"])
 
-if len(res_dict) == 0:
+if len(res_dict_mean) == 0 or len(res_dict_std) == 0:
     raise ValueError("No logs found for the given parameters.")
 
 # plotting
 plt.rcParams.update({
-    "text.usetex": True,
-    "font.family": "sans-serif",
-    "font.sans-serif": ["Helvetica"],
+    # "text.usetex": True,
+    # "font.family": "sans-serif",
+    # "font.sans-serif": ["Helvetica"],
     "font.size": 17})
 
 alphas = [1, 0.6, 0.6]
@@ -86,14 +91,17 @@ clrs = sns.color_palette("husl", 4)
 with sns.axes_style("whitegrid"):
     for i, algorithm in enumerate(["OFULogPlus", "adaECOLog", "OFULog-r"]):
         alg_name = alg_dict[algorithm]
-        plt.plot(res_dict[algorithm], label=alg_name, color=colors[i], alpha=alphas[i])
+        regret = res_dict_mean[algorithm]
+        std = res_dict_std[algorithm]
+        plt.plot(regret, label=alg_name, color=colors[i], alpha=alphas[i])
+        plt.fill_between(range(len(regret)), regret - std, regret + std, alpha=0.3, color=colors[i])
 
 plt.legend(loc='upper left', prop={'size': 19})
-plt.xlabel(r"$T$")
-plt.ylabel(r"$Reg^B(T)$")
+# plt.xlabel(r"$T$")
+# plt.ylabel(r"$Reg^B(T)$")
 plt.tight_layout()
 plt.tick_params(axis='both', which='major', labelsize=15)
 plt.tick_params(axis='both', which='minor', labelsize=15)
-plt.savefig(f"{logs_dir}/regret_S={param_norm + 1}_h={H}.pdf", dpi=300)
-plt.savefig(f"{logs_dir}/regret_S={param_norm + 1}_h={H}.png", dpi=300)
+plt.savefig(f"S={S}/regret_S={S}_h={H}.pdf", dpi=300)
+plt.savefig(f"S={S}/regret_S={S}_h={H}.png", dpi=300)
 plt.show()

@@ -29,6 +29,7 @@ def create_algo(config):
                        arm_norm_ub=config["arm_norm_ub"],
                        dim=config["dim"],
                        failure_level=config["failure_level"],
+                       horizon=config["horizon"],
                        plot_confidence=config["plot_confidence"],
                        N_confidence=config["N_confidence"])
     elif config["algo_name"] == 'OL2M':
@@ -46,6 +47,7 @@ def create_algo(config):
                       arm_norm_ub=config["arm_norm_ub"],
                       dim=config["dim"],
                       failure_level=config["failure_level"],
+                      horizon=config["horizon"],
                       plot_confidence=config["plot_confidence"],
                       N_confidence=config["N_confidence"])
     elif config["algo_name"] == 'OFULogPlus':
@@ -53,6 +55,7 @@ def create_algo(config):
                       arm_norm_ub=config["arm_norm_ub"],
                       dim=config["dim"],
                       failure_level=config["failure_level"],
+                      horizon=config["horizon"],
                       plot_confidence=config["plot_confidence"],
                       N_confidence=config["N_confidence"])
     if algo is None:
