@@ -8,7 +8,7 @@ Plot confidence sets for all algorithms
 optional arguments:
   -h, --help          show this help message and exit
   -ast [AST]          Dimension (default: tv_discrete)
-  -pn [PN]            Parameter norm (default: 10.0)
+  -pn [PN]            Parameter norm (default: 9.0)
   -Nconfidence [N]    Number of discretizations (per axis) for confidence set plot (default: 5000)
 """
 
@@ -46,8 +46,8 @@ tick_font_size = 24
 
 
 if S == 5:
-    displacements = [(0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0)]
-    manual_locations = [[(0.0, 0.0)], [(0.0, 0.0)], [(0.0, 0.0)]]   # label location for contourf
+    displacements = [(-0.5, 0.0), (-0.2, -0.5), (0.0, 0.0), (0.0, 0.0)]
+    manual_locations = [[(2.0, 1.0)], [(2.0, -2.0)], [(0.0, 0.0)]]   # label location for contourf
 elif S == 10:
     displacements = [(-1.0, 0), (-0.1, -0.75), (0.0, 0.0), (-1.5, 0.2)]
     manual_locations = [[(2.5, -2.5)], [(-2.5, 9.0)], [(5.0, 1.0)]]   # label location for contourf

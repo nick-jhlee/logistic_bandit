@@ -66,12 +66,12 @@ optional arguments:
   -d [D]      Dimension (default: 2)
   -hz [HZ]    Horizon length (default: 4000)
   -ast [AST]  Dimension (default: tv_discrete)
-  -pn [PN]    Parameter norm (default: 10.0)
+  -pn [PN]    Parameter norm (default: 9.0)
 ```
 
 Example output (S=10):
 
-<!-- <img src="./regret_fig.png" width="500" alt=""> -->
+<img src="./regret_fig.png" width="500" alt="">
 
 
 ### Confidence sets
@@ -85,7 +85,7 @@ Plot confidence sets for all algorithms
 optional arguments:
   -h, --help          show this help message and exit
   -ast [AST]          Dimension (default: tv_discrete)
-  -pn [PN]            Parameter norm (default: 10.0)
+  -pn [PN]            Parameter norm (default: 9.0)
   -Nconfidence [N]    Number of discretizations (per axis) for confidence set plot (default: 5000)
 ```
 

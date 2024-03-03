@@ -61,11 +61,11 @@ Experiments can be run for several Logistic Bandit (_i.e_ structured Bernoulli f
 Note that the Thompson Sampling type algorithm (TS) is only available for `GLOC`, `OL2M`, `GLM-UCB`, and `ada-OFU-ECOLog-TS`.
 For the first three algorithms, TS is automatically triggered for unit ball arm-set.
 
-## Single Experiment 
+## Single experiment 
 Single experiments (one algorithm for one environment) can be run thanks to `scripts/run_example.py`. The script instantiate the algorithm and environment indicated in the file `scripts/configs/example_config.py` and plots the regret.
 
-## Benchmark
-Benchmarks can be obtained thanks to `scripts/run_all.py`. This script runs experiments for any config file in `scripts/configs/generated_configs/` and stores the result in `scripts/logs/`. 
+## Reproducing the experiments
+The results in the paper can be obtained thanks to `scripts/run_all.py`. This script runs experiments for any config file in `scripts/configs/generated_configs/` and stores the result in `scripts/logs/`.
 
 
 ## Plot results
@@ -81,17 +81,29 @@ optional arguments:
   -h, --help  show this help message and exit
   -d [D]      Dimension (default: 2)
   -hz [HZ]    Horizon length (default: 4000)
-  -ast [AST]  Dimension (default: fixed_discrete)
-  -pn [PN]    Parameter norm (default: 1.0)
+  -ast [AST]  Dimension (default: tv_discrete)
+  -pn [PN]    Parameter norm (default: 9.0)
 ```
 
-Example output:
+Example output (S=10):
 
-<img src="./regret_fig.png" width="500" alt="">
+<!-- <img src="./regret_fig.png" width="500" alt=""> -->
 
 
 ### Confidence sets
-You can use `scripts/plot_confidence.ipynb` to plot the confidence sets for `OFULog-r`, `ada-OFU-ECOLog`, and `OFULog+`.
+You can use `scripts/plot_confidence.py` to plot confidence sets. This scripts plot confidence sets for all logs in `scripts/S=*`.
+
+```
+usage: plot_confidence.py [-h] [-ast [AST]] [-pn [PN]] [-Nconfidence [N]]
+
+Plot confidence sets for all algorithms
+
+optional arguments:
+  -h, --help          show this help message and exit
+  -ast [AST]          Dimension (default: tv_discrete)
+  -pn [PN]            Parameter norm (default: 9.0)
+  -Nconfidence [N]    Number of discretizations (per axis) for confidence set plot (default: 5000)
+```
 
 Example output (S=10):
 
