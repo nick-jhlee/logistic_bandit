@@ -5,20 +5,22 @@ This is forked from https://github.com/criteo-research/logistic_bandit.
 If you plan to use this repository or cite our paper, please use the following bibtex format:
 
 ```latex
+
 @InProceedings{lee2024logistic,
-	title = 	 {{Improved Regret Bounds of (Multinomial) Logistic Bandits via Regret-to-Confidence-Set Conversion}},
-	author =       {Junghyun Lee and Se-Young Yun and Kwang-Sung Jun},
-	booktitle = 	 {Proceedings of The 27th International Conference on Artificial Intelligence and Statistics},
-	pages = 	 {},
-	year = 	 {2024},
-	editor = 	 {},
-	volume = 	 {238},
-	series = 	 {Proceedings of Machine Learning Research},
-	month = 	 {02--04 May},
-	publisher =    {PMLR},
-	pdf = 	 {https://arxiv.org/pdf/2310.18554.pdf},
-	url = 	 {https://arxiv.org/abs/2310.18554},
+  title = 	 {{Improved Regret Bounds of (Multinomial) Logistic Bandits via Regret-to-Confidence-Set Conversion}},
+  author =       {Lee, Junghyun and Yun, Se-Young and Jun, Kwang-Sung},
+  booktitle = 	 {Proceedings of The 27th International Conference on Artificial Intelligence and Statistics},
+  pages = 	 {4474--4482},
+  year = 	 {2024},
+  editor = 	 {Dasgupta, Sanjoy and Mandt, Stephan and Li, Yingzhen},
+  volume = 	 {238},
+  series = 	 {Proceedings of Machine Learning Research},
+  month = 	 {02--04 May},
+  publisher =    {PMLR},
+  pdf = 	 {https://arxiv.org/pdf/2310.18554.pdf},
+  url = 	 {https://arxiv.org/abs/2310.18554},
 }
+
 ```
 
 # Install
