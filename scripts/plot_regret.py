@@ -51,7 +51,6 @@ for log_path in os.listdir(logs_dir):
     with open(os.path.join(logs_dir, log_path), 'r', encoding="utf8") as data:
         log_dict = json.load(data)
         # log_dict = json.load(open(os.path.join(logs_dir, log_path), 'r'))
-
         if "mean_cum_regret" not in log_dict.keys() or "std_cum_regret" not in log_dict.keys():
             continue
 
@@ -83,13 +82,16 @@ plt.rcParams.update({
     # "font.sans-serif": ["Helvetica"],
     "font.size": 17})
 
-alphas = [1, 0.6, 0.6]
-alg_dict = {"OFULogPlus": "OFULog+", "adaECOLog": "ada-OFU-ECOLog", "OFULog-r": "OFULog-r"}
-colors = ['red', 'purple', 'green']
+alphas = [1, 1, 0.6, 0.6]
+# alg_dict = {"OFULogPlus": "OFULog+", "adaECOLog": "ada-OFU-ECOLog", "OFULog-r": "OFULog-r"}
+# colors = ['red', 'purple', 'green']
+alg_dict = {"OFUGLB": "OFUGLB", "OFUGLB-e": "OFUGLB-e", "OFULogPlus": "OFULog+", "adaECOLog": "ada-OFU-ECOLog"}
+colors = ['red', 'orange', 'green', 'purple']
 clrs = sns.color_palette("husl", 4)
 
 with sns.axes_style("whitegrid"):
-    for i, algorithm in enumerate(["OFULogPlus", "adaECOLog", "OFULog-r"]):
+    for i, algorithm in enumerate(["OFUGLB", "OFUGLB-e", "adaECOLog"]):
+    # for i, algorithm in enumerate(["OFUGLB", "OFUGLB-e", "OFULogPlus", "adaECOLog"]):
         alg_name = alg_dict[algorithm]
         regret = res_dict_mean[algorithm]
         std = res_dict_std[algorithm]

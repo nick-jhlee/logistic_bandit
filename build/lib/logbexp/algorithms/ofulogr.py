@@ -2,7 +2,6 @@ import numpy as np
 
 from logbexp.algorithms.logistic_bandit_algo import LogisticBandit
 from numpy.linalg import slogdet
-from logbexp.utils.utils import sigmoid
 from scipy.optimize import minimize, NonlinearConstraint
 from scipy.stats import chi2
 
@@ -24,6 +23,10 @@ log_loss_hat : float
 ctr : int
     counter for lazy updates
 """
+
+
+def logistic(z):
+    return np.log(1 + np.exp(z))
 
 
 class OFULogr(LogisticBandit):
@@ -69,7 +72,7 @@ class OFULogr(LogisticBandit):
         self.l2reg = self.dim * np.log(2 + len(self.rewards))
         if self.ctr % self.lazy_update_fr == 0 or len(self.rewards) < 200:
             ## scipy
-            obj = lambda theta: self.logistic_loss(theta)
+            obj = lambda theta: self.neg_log_likelihood_np(theta)
             opt = minimize(obj, x0=self.theta_hat, method='SLSQP')
             self.theta_hat = opt.x
 
@@ -89,7 +92,7 @@ class OFULogr(LogisticBandit):
 
     def pull(self, arm_set):
         self.update_ucb_bonus()
-        self.log_loss_hat = self.logistic_loss(self.theta_hat)
+        self.log_loss_hat = self.neg_log_likelihood_np(self.theta_hat)
         arm = np.reshape(arm_set.argmax(self.compute_optimistic_reward), (-1,))
         return arm
 
@@ -116,7 +119,7 @@ class OFULogr(LogisticBandit):
             res = np.random.normal(0, 1)
         else:
             obj = lambda theta: -np.sum(arm * theta)
-            cstrf = lambda theta: self.logistic_loss(theta) - self.log_loss_hat
+            cstrf = lambda theta: self.neg_log_likelihood_np(theta) - self.log_loss_hat
             cstrf_norm = lambda theta: np.linalg.norm(theta)
             constraint = NonlinearConstraint(cstrf, 0, self.ucb_bonus)
             constraint_norm = NonlinearConstraint(cstrf_norm, 0, self.param_norm_ub)
@@ -135,15 +138,18 @@ class OFULogr(LogisticBandit):
                 np.savez(f"S={self.param_norm_ub}/OFULogr.npz", x=x, y=y, z=z, theta_hat=self.theta_hat)
         return res
 
-    def logistic_loss(self, theta):
+    def neg_log_likelihood_np(self, theta):
         """
         Computes the full log-loss estimated at theta
         """
-        res = self.l2reg / 2 * np.linalg.norm(theta)**2
-        if len(self.rewards) > 0:
-            coeffs = np.clip(sigmoid(np.dot(self.arms, theta)[:, None]), 1e-12, 1-1e-12)
-            res += -np.sum(np.array(self.rewards)[:, None] * np.log(coeffs / (1 - coeffs)) + np.log(1 - coeffs))
-        return res
+        if len(self.rewards) == 0:
+            return 0
+        else:
+            X = np.array(self.arms)
+            r = np.array(self.rewards).reshape((-1, 1))
+            theta = theta.reshape((-1, 1))
+            # print(X.shape, r.shape)
+        return np.sum(r * logistic(-X @ theta) + (1 - r) * logistic(X @ theta))
 
     def logistic_loss_seq(self, theta):
         res = self.l2reg / 2 * np.linalg.norm(theta, axis=0)**2

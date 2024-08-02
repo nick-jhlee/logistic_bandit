@@ -5,7 +5,6 @@ logbexp/regret_routines.py
 logbexp.egg-info/PKG-INFO
 logbexp.egg-info/SOURCES.txt
 logbexp.egg-info/dependency_links.txt
-logbexp.egg-info/requires.txt
 logbexp.egg-info/top_level.txt
 logbexp/algorithms/__init__.py
 logbexp/algorithms/algo_factory.py
@@ -14,9 +13,12 @@ logbexp/algorithms/glm_ucb.py
 logbexp/algorithms/gloc.py
 logbexp/algorithms/logistic_bandit_algo.py
 logbexp/algorithms/logistic_ucb_1.py
+logbexp/algorithms/ofuglb.py
+logbexp/algorithms/ofuglb_e.py
 logbexp/algorithms/ofulogplus.py
 logbexp/algorithms/ofulogr.py
 logbexp/algorithms/ol2m.py
+logbexp/algorithms/rs_glinucb.py
 logbexp/bandit/__init__.py
 logbexp/bandit/arm_set.py
 logbexp/bandit/logistic_env.py

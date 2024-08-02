@@ -1,39 +1,44 @@
 Metadata-Version: 2.1
 Name: logbexp
 Version: 1.0
-Summary: Logistic Bandit Experiments
+Summary: Bandit Experiments
 Home-page: https://github.com/nick-jhlee/logistic_bandit
 Author: Junghyun Lee and Louis Faury
 Author-email: jh_lee00@kaist.ac.kr, l.faury@hotmail.fr
 License: Apache License 2.0
 Requires-Python: >=3.8
 Description-Content-Type: text/markdown
-Requires-Dist: numpy
-Requires-Dist: matplotlib
-Requires-Dist: joblib
-Requires-Dist: scipy>=1.5.2
-Requires-Dist: pandas
 
-Code for the paper [_Improved Regret Bounds of (Multinomial) Logistic Bandits via Regret-to-Confidence-Set Conversion_](https://arxiv.org/abs/2310.18554) (AISTATS 2024), by [Junghyun Lee](https://nick-jhlee.github.io/), [Se-Young Yun](https://fbsqkd.github.io/), and [Kwang-Sung Jun](https://kwangsungjun.github.io).
+Code for the following two papers:
+- [_A Unified Confidence Sequence for Generalized Linear Models, with Applications to Bandits_](https://arxiv.org/abs/2407.13977) (arXiv 2024), by [Junghyun Lee](https://nick-jhlee.github.io/), [Se-Young Yun](https://fbsqkd.github.io/), and [Kwang-Sung Jun](https://kwangsungjun.github.io).
+- [_Improved Regret Bounds of (Multinomial) Logistic Bandits via Regret-to-Confidence-Set Conversion_](https://arxiv.org/abs/2310.18554) (AISTATS 2024), by [Junghyun Lee](https://nick-jhlee.github.io/), [Se-Young Yun](https://fbsqkd.github.io/), and [Kwang-Sung Jun](https://kwangsungjun.github.io).
 
 This is forked from https://github.com/criteo-research/logistic_bandit.
 
 If you plan to use this repository or cite our paper, please use the following bibtex format:
 
 ```latex
+@article{lee2024glm,
+	title={{A Unified Confidence Sequence for Generalized Linear Models, with Applications to Bandits}},
+	author={Lee, Junghyun and Yun, Se-Young and Jun, Kwang-Sung},
+	journal={arXiv preprint arXiv:2407.13977},
+	url={https://arxiv.org/abs/2407.13977},
+	year={2024}
+}
+
 @InProceedings{lee2024logistic,
-	title = 	 {{Improved Regret Bounds of (Multinomial) Logistic Bandits via Regret-to-Confidence-Set Conversion}},
-	author =       {Junghyun Lee and Se-Young Yun and Kwang-Sung Jun},
-	booktitle = 	 {Proceedings of The 27th International Conference on Artificial Intelligence and Statistics},
-	pages = 	 {},
-	year = 	 {2024},
-	editor = 	 {},
-	volume = 	 {238},
-	series = 	 {Proceedings of Machine Learning Research},
-	month = 	 {02--04 May},
-	publisher =    {PMLR},
-	pdf = 	 {https://arxiv.org/pdf/2310.18554.pdf},
-	url = 	 {https://arxiv.org/abs/2310.18554},
+  title = 	 {{Improved Regret Bounds of (Multinomial) Logistic Bandits via Regret-to-Confidence-Set Conversion}},
+  author =       {Lee, Junghyun and Yun, Se-Young and Jun, Kwang-Sung},
+  booktitle = 	 {Proceedings of The 27th International Conference on Artificial Intelligence and Statistics},
+  pages = 	 {4474--4482},
+  year = 	 {2024},
+  editor = 	 {Dasgupta, Sanjoy and Mandt, Stephan and Li, Yingzhen},
+  volume = 	 {238},
+  series = 	 {Proceedings of Machine Learning Research},
+  month = 	 {02--04 May},
+  publisher =    {PMLR},
+  pdf = 	 {https://arxiv.org/pdf/2310.18554.pdf},
+  url = 	 {https://arxiv.org/abs/2310.18554},
 }
 ```
 
@@ -46,15 +51,23 @@ Every time one changes the source code, one should run `pip install .` again to 
 
 # Usage
 
-This code implements the `OFULog+` algorithm of [Lee et al. 2024](https://arxiv.org/abs/2310.18554), along with several baselines (oldest to newest):
+This code implements the `OFULog+` of [Lee et al. 2024](https://arxiv.org/abs/2310.18554) and `OFUGLB` & `OFUGLB-e` of [Lee et al. 2024](https://arxiv.org/abs/2407.13977), along with several baselines (oldest to newest):
 
 - `GLM-UCB` from [Filippi et al. 2010](https://papers.nips.cc/paper/2010/file/c2626d850c80ea07e7511bbae4c76f4b-Paper.pdf),
+- `OFUL` (\*) from [Abbasi-Yadkori et al. 2011](https://papers.nips.cc/paper/2011/file/7f1c3f338b8e2e9d6b5e8e4e7f3b4208-Paper.pdf)
 - `OL2M` from [Zhang et al. 2016](http://proceedings.mlr.press/v48/zhangb16.pdf),
 - `GLOC` from [Jun et al. 2017](https://proceedings.neurips.cc/paper/2017/file/28dd2c7955ce926456240b2ff0100bde-Paper.pdf),
-- `LogUCB1` from [Faury et al. 2020](http://proceedings.mlr.press/v119/faury20a/faury20a.pdf),
-- `OFULog-r` from [Abeille et al. 2021](http://proceedings.mlr.press/v130/abeille21a/abeille21a.pdf).
-- `ada-OFU-ECOLog` from [Faury et al. 2022](https://proceedings.mlr.press/v151/faury22a.html)
-- `ada-OFU-ECOLog-TS` from [Faury et al. 2022](https://proceedings.mlr.press/v151/faury22a.html)
+- `LogUCB1` (\**) from [Faury et al. 2020](http://proceedings.mlr.press/v119/faury20a/faury20a.pdf),
+- `OFULog-r` (\**) from [Abeille et al. 2021](http://proceedings.mlr.press/v130/abeille21a/abeille21a.pdf).
+- `ada-OFU-ECOLog` (\**) from [Faury et al. 2022](https://proceedings.mlr.press/v151/faury22a.html)
+- `ada-OFU-ECOLog-TS` (\**) from [Faury et al. 2022](https://proceedings.mlr.press/v151/faury22a.html)
+- `EMK` from [Emmenegger et al. 2023](hhttps://openreview.net/forum?id=4anryczeED)
+- `CMM-UCB` (\*) from [Flynn et al. 2023](https://openreview.net/forum?id=TXoZiUZywf&noteId=hiOPt0S3AO)
+- `RS-GLinCB` (\***) from [Sawarni et al. 2024](https://arxiv.org/abs/2404.06831)
+
+(\*) only applicable to linear bandits
+(\**) only applicable to logistic bandits
+(\***) only applicable to bounded GLBs
 
 
 Experiments can be run for several Logistic Bandit (_i.e_ structured Bernoulli feedback) environments, such as static and time-varying finite arm-sets, or inifinite arm-sets (_e.g._ unit ball).
@@ -62,10 +75,10 @@ Note that the Thompson Sampling type algorithm (TS) is only available for `GLOC`
 For the first three algorithms, TS is automatically triggered for unit ball arm-set.
 
 ## Single experiment 
-Single experiments (one algorithm for one environment) can be run thanks to `scripts/run_example.py`. The script instantiate the algorithm and environment indicated in the file `scripts/configs/example_config.py` and plots the regret.
+Single experiments (one algorithm for one environment) can be run via `scripts/run_example.py`. The script instantiate the algorithm and environment indicated in the file `scripts/configs/example_config.py` and plots the regret.
 
 ## Reproducing the experiments
-The results in the paper can be obtained thanks to `scripts/run_all.py`. This script runs experiments for any config file in `scripts/configs/generated_configs/` and stores the result in `scripts/logs/`.
+The results in the paper can be obtained via `scripts/run_all.py`. This script runs experiments for any config file in `scripts/configs/generated_configs/` and stores the result in `scripts/logs/`.
 
 
 ## Plot results
@@ -87,7 +100,7 @@ optional arguments:
 
 Example output (S=10):
 
-<!-- <img src="./regret_fig.png" width="500" alt=""> -->
+<img src="./regret_fig.png" width="500" alt="">
 
 
 ### Confidence sets

@@ -38,19 +38,22 @@ theta_star = np.array([(S - 1) / np.sqrt(2), (S - 1) / np.sqrt(2)])
 interact_rng = np.linspace(-S - 0.5, S + 0.5, N)
 x, y = np.meshgrid(interact_rng, interact_rng)
 
-fnames = ["adaECOLog.npz","OFULogr.npz", "OFULogPlus.npz"]
-alg_names = ["ada-OFU-ECOLog", "OFULog-r", "OFULog+"]
-colors = ['purple', 'green', 'red']
+# fnames = ["adaECOLog.npz","OFULogr.npz", "OFULogPlus.npz"]
+# alg_names = ["ada-OFU-ECOLog", "OFULog-r", "OFULog+"]
+# colors = ['purple', 'green', 'red']
+fnames = ["OFULogPlus.npz", "GLMUCBPlus.npz"]
+alg_names = ["OFULog+", "OFUGLB"]
+colors = ['green', 'red']
 
 tick_font_size = 24
 
 
 if S == 5:
-    displacements = [(-0.5, 0.0), (-0.2, -0.5), (0.0, 0.0), (0.0, 0.0)]
-    manual_locations = [[(2.0, 1.0)], [(2.0, -2.0)], [(0.0, 0.0)]]   # label location for contourf
+    displacements = [(-0.2, 0.0), (-0.1, -0.35), (0.0, 0.0)]
+    manual_locations = [[(2.0, 1.0)], [(2.0, -2.0)]]   # label location for contourf
 elif S == 10:
-    displacements = [(-1.0, 0), (-0.1, -0.75), (0.0, 0.0), (-1.5, 0.2)]
-    manual_locations = [[(2.5, -2.5)], [(-2.5, 9.0)], [(5.0, 1.0)]]   # label location for contourf
+    displacements = [(0.0, 0), (-0.4, 0.0), (0.0, -0.2)]
+    manual_locations = [[(6.0, 0.0)], [(6.0, 0.0)]]   # label location for contourf
 else:
     print(f"For better plots, manually set displacements and contourf label locations for S={S}")
     displacements = [(0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0)]
@@ -79,8 +82,10 @@ plt.annotate(r" $\theta_{\star}$", theta_star + displacements[-1], color='blue',
 z_ = (np.linalg.norm(np.array([x, y]), axis=0) <= S).astype(int)
 plt.contourf(x, y, z_, levels=[1-1e-12, 1+1e-12], alpha=0.1)
 
-plt.xlim([-S - 0.5, S + 0.5])
-plt.ylim([-S - 0.5, S + 0.5])
+# plt.xlim([-S - 0.5, S + 0.5])
+# plt.ylim([-S - 0.5, S + 0.5])
+plt.xlim([0.5, S + 0.1])
+plt.ylim([0.5, S + 0.1])
 plt.tick_params(axis='both', which='major', labelsize=tick_font_size)
 plt.tick_params(axis='both', which='minor', labelsize=tick_font_size)
 # plt.axis('off')

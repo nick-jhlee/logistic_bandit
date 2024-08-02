@@ -29,7 +29,7 @@ class EcoLog(LogisticBandit):
     def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, plot_confidence=False, N_confidence=500):
         super().__init__(param_norm_ub, arm_norm_ub, dim, failure_level)
         self.name = 'adaECOLog'
-        self.l2reg = 10
+        self.l2reg = param_norm_ub
         self.vtilde_matrix = self.l2reg * np.eye(self.dim)
         self.vtilde_matrix_inv = (1 / self.l2reg) * np.eye(self.dim)
         self.theta = np.zeros((self.dim,))

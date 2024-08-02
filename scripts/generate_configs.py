@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser(description='Automatically creates configs, sto
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-dims', nargs='+', type=int, help='Dimension')
 parser.add_argument('-pn', nargs='+', type=float, help='Parameter norm (||theta_star||)')
-parser.add_argument('-algos', type=str, nargs='+', help='Algorithms. Possibilities include GLM-UCB, LogUCB1, OFULog-r, OL2M, GLOC, adaECOLog, or OFULogPlus')
+parser.add_argument('-algos', type=str, nargs='+', help='Algorithms. Must be a subset of OFULog-r, OL2M, GLOC, adaECOLog, OFULogPlus, OFUGLB, OFUGLB-e, RS-GLinCB')
 parser.add_argument('-r', type=int, nargs='?', default=20, help='# of independent runs')
 parser.add_argument('-hz', type=int, nargs='?', default=1000, help='Horizon, normalized (later multiplied by sqrt(dim))')
 parser.add_argument('-ast', type=str, nargs='?', default='fixed_discrete', help='Arm set type. Must be either fixed_discrete, tv_discrete or ball')

@@ -1,3 +1,7 @@
-scripts/S=10
-scripts/S=5
-scripts/logs
+scripts/logs/
+scripts/neurips/
+scripts/S=4/
+scripts/S=6/
+scripts/S=8/
+scripts/S=10/
+scripts/configs/
