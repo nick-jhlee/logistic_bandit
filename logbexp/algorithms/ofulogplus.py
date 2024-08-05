@@ -102,23 +102,9 @@ class OFULogPlus(LogisticBandit):
             if self.plot and len(self.rewards) == self.T - 2:
                 ## store data
                 interact_rng = np.linspace(-self.param_norm_ub - 0.5, self.param_norm_ub + 0.5, self.N)
-                x, y = np.meshgrid(interact_rng, interact_rng)
-                f = lambda x, y: self.logistic_loss_seq(np.array([x, y])) - self.log_loss_hat
-                z = (f(x, y) <= self.ucb_bonus) & (np.linalg.norm(np.array([x, y]), axis=0) <= self.param_norm_ub)
-                z = z.astype(int)
-                np.savez(f"S={self.param_norm_ub}/{self.name}.npz", x=x, y=y, z=z, theta_hat=self.theta_hat)
+                X, Y = np.meshgrid(interact_rng, interact_rng)
+                f = lambda x, y: self.neg_log_likelihood_plotting(np.array([x, y])) - self.log_loss_hat
+                Z = (f(X, Y) <= self.ucb_bonus) & (np.linalg.norm(np.array([X, Y]), axis=0) <= self.param_norm_ub)
+                Z = Z.astype(int)
+                np.savez(f"S={self.param_norm_ub}/{self.name}.npz", x=X, y=Y, z=Z, theta_hat=self.theta_hat)
         return res
-
-    # def neg_log_likelihood_cp(self, theta):
-    #     """
-    #     Computes the full log-loss estimated at theta
-    #     CVXPY version
-    #     """
-    #     if len(self.rewards) == 0:
-    #         return 0
-    #     else:
-    #         X = np.array(self.arms)
-    #         r = np.array(self.rewards).reshape((-1, 1))
-    #         theta = theta.reshape((-1, 1))
-    #         # print(X.shape, r.shape)
-    #         return cp.sum(cp.multiply(r, cp.logistic(-X @ theta)) + cp.multiply((1 - r)

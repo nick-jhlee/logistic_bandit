@@ -148,12 +148,13 @@ class OFUGLBe(LogisticBandit):
             if self.plot and len(self.rewards) == self.T - 2:
                 ## store data
                 interact_rng = np.linspace(-self.param_norm_ub - 0.5, self.param_norm_ub + 0.5, self.N)
-                x, y = np.meshgrid(interact_rng, interact_rng)
-                f = lambda x, y: (np.array([x, y]) - self.theta_hat).T @ self.Ht @ (np.array([x, y]) - self.theta_hat)
-                z = (f(x, y) <= self.ucb_bonus) & (np.linalg.norm(np.array([x, y]), axis=0) <= self.param_norm_ub)
-                z = z.astype(int)
+                X, Y = np.meshgrid(interact_rng, interact_rng)
+                tmp = np.array([X, Y]) - self.theta_hat.reshape(2, 1, 1)
+                Z = (np.einsum('kij,kl,lij->ij', tmp, self.Ht, tmp) <= self.ucb_bonus) & (
+                        np.linalg.norm(np.array([X, Y]), axis=0) <= self.param_norm_ub)
+                Z = Z.astype(int)
                 with open(f"S={self.param_norm_ub}/{self.name}.npz", "wb") as file:
-                    np.savez(file, theta_hat=self.theta_hat, x=x, y=y, z=z)
+                    np.savez(file, theta_hat=self.theta_hat, x=X, y=Y, z=Z)
         return res
 
     # def neg_log_likelihood_cp(self, theta):

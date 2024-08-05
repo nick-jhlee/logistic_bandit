@@ -155,12 +155,13 @@ class EMK(LogisticBandit):
             if self.plot and len(self.rewards) == self.T - 2:
                 ## store data
                 interact_rng = np.linspace(-self.param_norm_ub - 0.5, self.param_norm_ub + 0.5, self.N)
-                x, y = np.meshgrid(interact_rng, interact_rng)
-                f = lambda x, y: self.neg_log_likelihood_sequential(np.array([x, y])) - self.weighted_log_hat
-                z = (f(x, y) <= np.log(1 / self.failure_level)) & (np.linalg.norm(np.array([x, y]), axis=0) <= self.param_norm_ub)
-                z = z.astype(int)
+                X, Y = np.meshgrid(interact_rng, interact_rng)
+                f = lambda x, y: self.neg_log_likelihood_sequential_plotting(np.array([x, y])) - self.weighted_log_hat
+                Z = ((f(X, Y) <= np.log(1 / self.failure_level))
+                     & (np.linalg.norm(np.array([X, Y]), axis=0) <= self.param_norm_ub))
+                Z = Z.astype(int)
                 with open(f"S={self.param_norm_ub}/{self.name}.npz", "wb") as file:
-                    np.savez(file, theta_hat=self.theta_hat, x=x, y=y, z=z)
+                    np.savez(file, theta_hat=self.theta_hat, x=X, y=Y, z=Z)
         return res
 
     def neg_log_likelihood_sequential(self, theta):
@@ -190,3 +191,20 @@ class EMK(LogisticBandit):
             weights = np.array(self.weights).reshape((-1, 1))
             # print(X.shape, r.shape)
             return np.sum(weights * ((mu(X @ theta) - r) * X), axis=0).reshape((self.dim, 1))
+
+    def neg_log_likelihood_sequential_plotting(self, grid):
+        """
+        Computes the full, weighted negative log likelihood at theta
+        Taylor made for plotting
+        grid : (2, N, N)
+        """
+        if len(self.rewards) == 0:
+            return 0
+        else:
+            X = np.array(self.arms)
+            tmp = np.einsum('td,dij->tij', X, grid)
+            r_weights1 = np.array(self.rewards) * np.array(self.weights)
+            tmp1 = np.einsum('t,tij->ij', r_weights1, np.log(mu(tmp)))
+            r_weights2 = (1 - np.array(self.rewards)) * np.array(self.weights)
+            tmp2 = np.einsum('t,tij->ij', r_weights2, np.log(mu(-tmp)))
+            return - tmp1 - tmp2

@@ -1,4 +1,3 @@
-
 """
 Helper functions for regret minimization
 """
@@ -10,7 +9,6 @@ from logbexp.bandit.logistic_env import create_env
 from joblib import Parallel, delayed
 from tqdm import tqdm
 from time import perf_counter
-
 
 
 def one_bandit_exp(config):
@@ -35,6 +33,7 @@ def one_bandit_exp(config):
 def many_bandit_exps(config):
     def run_bandit_exp(*args):
         return one_bandit_exp(config)
+
     # n_jobs=10
     if config['repeat'] > 1:
         everything = Parallel(n_jobs=-1)(delayed(run_bandit_exp)(i) for i in range(config["repeat"]))
@@ -48,4 +47,3 @@ def many_bandit_exps(config):
         kappa_inv = everything[1]
         cum_regret = np.cumsum(regret)
         return cum_regret, np.zeros(cum_regret.shape), kappa_inv
-    

@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser(description='Plot confidence sets for all algor
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-pn', type=float, nargs='?', default=9.0, help='Parameter norm')
 parser.add_argument('-ast', type=str, nargs='?', default='tv_discrete', help='Arm set type. Must be either fixed_discrete, tv_discrete or ball')
-parser.add_argument('-Nconfidence', type=int, nargs='?', default=5000, help='Number of discretizations (per axis) for confidence set plot')
+parser.add_argument('-Nconfidence', type=int, nargs='?', default=1000, help='Number of discretizations (per axis) for confidence set plot')
 args = parser.parse_args()
 
 param_norm = args.pn
@@ -41,23 +41,23 @@ x, y = np.meshgrid(interact_rng, interact_rng)
 # fnames = ["adaECOLog.npz","OFULogr.npz", "OFULogPlus.npz"]
 # alg_names = ["ada-OFU-ECOLog", "OFULog-r", "OFULog+"]
 # colors = ['purple', 'green', 'red']
-fnames = ["OFULogPlus.npz", "GLMUCBPlus.npz"]
-alg_names = ["OFULog+", "OFUGLB"]
-colors = ['green', 'red']
+fnames = ["OFUGLB.npz", "OFUGLB-e.npz", "EMK.npz", "OFULogPlus.npz"]
+alg_names = ["OFUGLB", "OFUGLB-e", "EMK", "OFULog+"]
+colors = ['red', 'blue', 'orange', 'green']
 
 tick_font_size = 24
 
 
-if S == 5:
-    displacements = [(-0.2, 0.0), (-0.1, -0.35), (0.0, 0.0)]
-    manual_locations = [[(2.0, 1.0)], [(2.0, -2.0)]]   # label location for contourf
-elif S == 10:
-    displacements = [(0.0, 0), (-0.4, 0.0), (0.0, -0.2)]
-    manual_locations = [[(6.0, 0.0)], [(6.0, 0.0)]]   # label location for contourf
-else:
-    print(f"For better plots, manually set displacements and contourf label locations for S={S}")
-    displacements = [(0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0)]
-    manual_locations = [[(0.0, 0.0)], [(0.0, 0.0)], [(0.0, 0.0)]]   # label location for contourf
+# if S == 5:
+#     displacements = [(-0.2, 0.0), (-0.1, -0.35), (0.0, 0.0)]
+#     manual_locations = [[(2.0, 1.0)], [(2.0, -2.0)]]   # label location for contourf
+# elif S == 10:
+#     displacements = [(0.0, 0), (-0.4, 0.0), (0.0, -0.2)]
+#     manual_locations = [[(6.0, 0.0)], [(6.0, 0.0)]]   # label location for contourf
+# else:
+#     print(f"For better plots, manually set displacements and contourf label locations for S={S}")
+displacements = [(0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0)]
+manual_locations = [[(0.0, 0.0)], [(0.0, 0.0)], [(0.0, 0.0)], [(0.0, 0.0)]]   # label location for contourf
 
 
 # plotting
@@ -84,8 +84,8 @@ plt.contourf(x, y, z_, levels=[1-1e-12, 1+1e-12], alpha=0.1)
 
 # plt.xlim([-S - 0.5, S + 0.5])
 # plt.ylim([-S - 0.5, S + 0.5])
-plt.xlim([0.5, S + 0.1])
-plt.ylim([0.5, S + 0.1])
+# plt.xlim([0.5, S + 0.1])
+# plt.ylim([0.5, S + 0.1])
 plt.tick_params(axis='both', which='major', labelsize=tick_font_size)
 plt.tick_params(axis='both', which='minor', labelsize=tick_font_size)
 # plt.axis('off')

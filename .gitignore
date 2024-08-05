@@ -1,5 +1,7 @@
 scripts/logs/
-scripts/neurips/
+scripts/logs_plot/
+scripts/logs_runtime/
+scripts/cmd_logs/
 scripts/S=4/
 scripts/S=6/
 scripts/S=8/
