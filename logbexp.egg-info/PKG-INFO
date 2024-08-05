@@ -9,9 +9,9 @@ License: Apache License 2.0
 Requires-Python: >=3.8
 Description-Content-Type: text/markdown
 
-Code for the following two papers:
-- [_A Unified Confidence Sequence for Generalized Linear Models, with Applications to Bandits_](https://arxiv.org/abs/2407.13977) (arXiv 2024), by [Junghyun Lee](https://nick-jhlee.github.io/), [Se-Young Yun](https://fbsqkd.github.io/), and [Kwang-Sung Jun](https://kwangsungjun.github.io).
-- [_Improved Regret Bounds of (Multinomial) Logistic Bandits via Regret-to-Confidence-Set Conversion_](https://arxiv.org/abs/2310.18554) (AISTATS 2024), by [Junghyun Lee](https://nick-jhlee.github.io/), [Se-Young Yun](https://fbsqkd.github.io/), and [Kwang-Sung Jun](https://kwangsungjun.github.io).
+Codes for the following two papers by [Junghyun Lee](https://nick-jhlee.github.io/), [Se-Young Yun](https://fbsqkd.github.io/), and [Kwang-Sung Jun](https://kwangsungjun.github.io):
+- [_A Unified Confidence Sequence for Generalized Linear Models, with Applications to Bandits_](https://arxiv.org/abs/2407.13977) (arXiv 2024),
+- [_Improved Regret Bounds of (Multinomial) Logistic Bandits via Regret-to-Confidence-Set Conversion_](https://arxiv.org/abs/2310.18554) (AISTATS 2024).
 
 This is forked from https://github.com/criteo-research/logistic_bandit.
 
@@ -51,7 +51,7 @@ Every time one changes the source code, one should run `pip install .` again to 
 
 # Usage
 
-This code implements the `OFULog+` of [Lee et al. 2024](https://arxiv.org/abs/2310.18554) and `OFUGLB` & `OFUGLB-e` of [Lee et al. 2024](https://arxiv.org/abs/2407.13977), along with several baselines (oldest to newest):
+This code implements the following bandit algorithms (oldest to newest):
 
 - `GLM-UCB` from [Filippi et al. 2010](https://papers.nips.cc/paper/2010/file/c2626d850c80ea07e7511bbae4c76f4b-Paper.pdf),
 - `OFUL` (\*) from [Abbasi-Yadkori et al. 2011](https://papers.nips.cc/paper/2011/file/7f1c3f338b8e2e9d6b5e8e4e7f3b4208-Paper.pdf)
@@ -61,16 +61,18 @@ This code implements the `OFULog+` of [Lee et al. 2024](https://arxiv.org/abs/23
 - `OFULog-r` (\**) from [Abeille et al. 2021](http://proceedings.mlr.press/v130/abeille21a/abeille21a.pdf).
 - `ada-OFU-ECOLog` (\**) from [Faury et al. 2022](https://proceedings.mlr.press/v151/faury22a.html)
 - `ada-OFU-ECOLog-TS` (\**) from [Faury et al. 2022](https://proceedings.mlr.press/v151/faury22a.html)
+- `OFULog+` (\**) [Lee et al. 2024a](https://arxiv.org/abs/2310.18554)
 - `EMK` from [Emmenegger et al. 2023](hhttps://openreview.net/forum?id=4anryczeED)
 - `CMM-UCB` (\*) from [Flynn et al. 2023](https://openreview.net/forum?id=TXoZiUZywf&noteId=hiOPt0S3AO)
 - `RS-GLinCB` (\***) from [Sawarni et al. 2024](https://arxiv.org/abs/2404.06831)
+- `OFUGLB` & `OFUGLB-e` of [Lee et al. 2024b](https://arxiv.org/abs/2407.13977)
 
 (\*) only applicable to linear bandits
 (\**) only applicable to logistic bandits
 (\***) only applicable to bounded GLBs
 
 
-Experiments can be run for several Logistic Bandit (_i.e_ structured Bernoulli feedback) environments, such as static and time-varying finite arm-sets, or inifinite arm-sets (_e.g._ unit ball).
+Experiments can be run for several Logistic Bandit (i.e., structured Bernoulli feedback) environments, such as static and time-varying finite arm-sets, or inifinite arm-sets (_e.g._ unit ball).
 Note that the Thompson Sampling type algorithm (TS) is only available for `GLOC`, `OL2M`, `GLM-UCB`, and `ada-OFU-ECOLog-TS`.
 For the first three algorithms, TS is automatically triggered for unit ball arm-set.
 
@@ -137,12 +139,14 @@ optional arguments:
                         Dimension (default: None)
   -pn PN [PN ...]       Parameter norm (||theta_star||) (default: None)
   -algos ALGOS [ALGOS ...]
-                        Algorithms. Possibilities include GLM-UCB, LogUCB1, OFULog-r, OL2M, GLOC, adaECOLog, or OFULogPlus (default: None)
-  -r [R]                # of independent runs (default: 20)
-  -hz [HZ]              Horizon, normalized (later multiplied by sqrt(dim)) (default: 1000)
-  -ast [AST]            Arm set type. Must be either fixed_discrete, tv_discrete or ball (default: fixed_discrete)
+                        List of algorithms. (default: None)
+                        ('EMK', 'RS-GLinCB', 'OFUGLB-e', 'OFUGLB', 'OFULogPlus', 'adaECOLog', 'OFULog-r', 'LogUCB1', 'OL2M', 'GLOC', 'GLM-UCB')
+  -r [R]                # of independent runs (default: 10)
+  -hz [HZ]              Horizon, normalized (later multiplied by sqrt(dim)) (default: 2000)
+  -ast [AST]            Arm set type. Must be either fixed_discrete, tv_discrete or ball (default: tv_discrete)
   -ass [ASS]            Arm set size, normalized (later multiplied by dim) (default: 10)
   -fl [FL]              Failure level, must be in (0,1) (default: 0.05)
+  -plotconfidence [N]   To plot the confidence set at the end or not (default: False)
   -Nconfidence [N]      Number of discretizations (per axis) for confidence set plot
 ```
 

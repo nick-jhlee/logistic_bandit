@@ -1,3 +1,4 @@
+from logbexp.utils.utils import *
 
 
 class LogisticBandit(object):
@@ -35,6 +36,8 @@ class LogisticBandit(object):
         self.dim = dim
         self.failure_level = failure_level
         self.name = None
+        self.arms = []
+        self.rewards = []
 
     def pull(self, arm_set):
         raise NotImplementedError
@@ -44,3 +47,55 @@ class LogisticBandit(object):
 
     def reset(self):
         raise NotImplementedError
+
+    def neg_log_likelihood(self, theta, arms, rewards):
+        """
+        Computes the negative log likelihood at theta, over the prescribed arms and rewards
+        """
+        if len(rewards) == 0:
+            return 0
+        else:
+            X = np.array(arms)
+            r = np.array(rewards).reshape((-1, 1))
+            theta = theta.reshape((-1, 1))
+            # print(X.shape, r.shape)
+            return - np.sum(r * np.log(sigmoid(X @ theta)) + (1 - r) * np.log(sigmoid(- X @ theta)))
+
+    def neg_log_likelihood_J(self, theta, arms, rewards):
+        """
+        Derivative of neg_log_likelihood
+        """
+        if len(rewards) == 0:
+            return np.zeros((self.dim, 1))
+        else:
+            X = np.array(arms)
+            r = np.array(rewards).reshape((-1, 1))
+            theta = theta.reshape((-1, 1))
+            # print(X.shape, r.shape)
+            return np.sum((sigmoid(X @ theta) - r) * X, axis=0).reshape((self.dim, 1))
+
+    def neg_log_likelihood_full(self, theta):
+        """
+        Computes the full log-loss at theta
+        """
+        return self.neg_log_likelihood(theta, self.arms, self.rewards)
+
+    def neg_log_likelihood_full_J(self, theta):
+        """
+        Derivative of neg_log_likelihood_full
+        """
+        return self.neg_log_likelihood_J(theta, self.arms, self.rewards)
+
+    def logistic_loss_seq(self, theta):
+        """
+        For plotting the CS
+        """
+        res = 0
+        for s, r in enumerate(self.rewards):
+            mu_s = 1 / (1 + np.exp(-np.tensordot(self.arms[s].reshape((self.dim, 1)), theta, axes=([0], [0]))))
+            # mu_s = np.clip(mu_s, 1e-12, 1 - 1e-12)
+            if r == 0:
+                res += -(1 - r) * np.log(1 - mu_s)
+            else:
+                res += -r * np.log(mu_s)
+        return res.squeeze()

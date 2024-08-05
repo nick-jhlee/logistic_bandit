@@ -16,12 +16,13 @@ ctr : int
     counter for lazy updates
 """
 import numpy as np
+from scipy.optimize import minimize
+
 from logbexp.algorithms.logistic_bandit_algo import LogisticBandit
-from scipy.optimize import minimize, NonlinearConstraint
 
 
-def logistic(z):
-    return np.log(1 + np.exp(z))
+def mu(z):
+    return 1 / (1 + np.exp(-z))
 
 
 class OFULogPlus(LogisticBandit):
@@ -38,9 +39,6 @@ class OFULogPlus(LogisticBandit):
         self.ctr = 0
         self.ucb_bonus = 0
         self.log_loss_hat = 0
-        # containers
-        self.arms = []
-        self.rewards = []
         self.plot = plot_confidence
         self.N = N_confidence
         self.T = horizon
@@ -61,21 +59,22 @@ class OFULogPlus(LogisticBandit):
         self.arms.append(arm)
         self.rewards.append(reward)
 
-        # norm-constrained convex optim for MLE
-        if self.ctr % self.lazy_update_fr == 0 or len(self.rewards) < 200:
-            # if lazy we learn with a reduced frequency
-            obj = lambda theta: self.neg_log_likelihood_np(theta)
-            cstrf_norm = lambda theta: np.linalg.norm(theta)
-            constraint_norm = NonlinearConstraint(cstrf_norm, 0, self.param_norm_ub)
-            opt = minimize(obj, x0=self.theta_hat, method='SLSQP', constraints=[constraint_norm])
-            # , options={'maxiter': 20}
-            self.theta_hat = opt.x
+        ## SLSQP
+        ineq_cons = {'type': 'ineq',
+                     'fun': lambda theta: np.array([
+                         self.param_norm_ub ** 2 - np.dot(theta, theta)]),
+                     'jac': lambda theta: 2 * np.array([- theta])}
+        opt = minimize(self.neg_log_likelihood_full, x0=np.reshape(self.theta_hat, (-1,)), method='SLSQP',
+                       jac=self.neg_log_likelihood_full_J,
+                       constraints=ineq_cons)
+        self.theta_hat = opt.x
+
         # update counter
         self.ctr += 1
 
     def pull(self, arm_set):
         self.update_ucb_bonus()
-        self.log_loss_hat = self.neg_log_likelihood_np(self.theta_hat)
+        self.log_loss_hat = self.neg_log_likelihood_full(self.theta_hat)
         arm = np.reshape(arm_set.argmax(self.compute_optimistic_reward), (-1,))
         return arm
 
@@ -88,13 +87,15 @@ class OFULogPlus(LogisticBandit):
         if self.ctr == 1:
             res = np.random.normal(0, 1)
         else:
+            ## SLSQP
             obj = lambda theta: -np.sum(arm * theta)
-            cstrf = lambda theta: self.neg_log_likelihood_np(theta) - self.log_loss_hat
-            cstrf_norm = lambda theta: np.linalg.norm(theta)
-            constraint = NonlinearConstraint(cstrf, 0, self.ucb_bonus)
-            constraint_norm = NonlinearConstraint(cstrf_norm, 0, self.param_norm_ub)
-            opt = minimize(obj, x0=self.theta_hat, method='SLSQP', constraints=[constraint, constraint_norm])
-            # , options={'maxiter': 20}
+            obj_J = lambda theta: -arm
+            ineq_cons = {'type': 'ineq',
+                         'fun': lambda theta: np.array([
+                             self.ucb_bonus - (self.neg_log_likelihood_full(theta) - self.log_loss_hat),
+                             self.param_norm_ub ** 2 - np.dot(theta, theta)]),
+                         'jac': lambda theta: - np.vstack((self.neg_log_likelihood_full_J(theta).T, 2 * theta))}
+            opt = minimize(obj, x0=self.theta_hat, method='SLSQP', jac=obj_J, constraints=ineq_cons)
             res = np.sum(arm * opt.x)
 
             ## plot confidence set
@@ -105,29 +106,19 @@ class OFULogPlus(LogisticBandit):
                 f = lambda x, y: self.logistic_loss_seq(np.array([x, y])) - self.log_loss_hat
                 z = (f(x, y) <= self.ucb_bonus) & (np.linalg.norm(np.array([x, y]), axis=0) <= self.param_norm_ub)
                 z = z.astype(int)
-                np.savez(f"S={self.param_norm_ub}/OFULogPlus.npz", x=x, y=y, z=z, theta_hat=self.theta_hat)
+                np.savez(f"S={self.param_norm_ub}/{self.name}.npz", x=x, y=y, z=z, theta_hat=self.theta_hat)
         return res
 
-    def neg_log_likelihood_np(self, theta):
-        """
-        Computes the full log-loss estimated at theta
-        """
-        if len(self.rewards) == 0:
-            return 0
-        else:
-            X = np.array(self.arms)
-            r = np.array(self.rewards).reshape((-1, 1))
-            theta = theta.reshape((-1, 1))
-            # print(X.shape, r.shape)
-        return np.sum(r * logistic(-X @ theta) + (1 - r) * logistic(X @ theta))
-
-    def logistic_loss_seq(self, theta):
-        res = 0
-        for s, r in enumerate(self.rewards):
-            mu_s = 1 / (1 + np.exp(-np.tensordot(self.arms[s].reshape((self.dim, 1)), theta, axes=([0], [0]))))
-            mu_s = np.clip(mu_s, 1e-12, 1 - 1e-12)
-            if r == 0:
-                res += -(1 - r) * np.log(1 - mu_s)
-            else:
-                res += -r * np.log(mu_s)
-        return res.squeeze()
+    # def neg_log_likelihood_cp(self, theta):
+    #     """
+    #     Computes the full log-loss estimated at theta
+    #     CVXPY version
+    #     """
+    #     if len(self.rewards) == 0:
+    #         return 0
+    #     else:
+    #         X = np.array(self.arms)
+    #         r = np.array(self.rewards).reshape((-1, 1))
+    #         theta = theta.reshape((-1, 1))
+    #         # print(X.shape, r.shape)
+    #         return cp.sum(cp.multiply(r, cp.logistic(-X @ theta)) + cp.multiply((1 - r)

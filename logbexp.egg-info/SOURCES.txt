@@ -9,6 +9,7 @@ logbexp.egg-info/top_level.txt
 logbexp/algorithms/__init__.py
 logbexp/algorithms/algo_factory.py
 logbexp/algorithms/ecolog.py
+logbexp/algorithms/emk.py
 logbexp/algorithms/glm_ucb.py
 logbexp/algorithms/gloc.py
 logbexp/algorithms/logistic_bandit_algo.py
@@ -18,7 +19,7 @@ logbexp/algorithms/ofuglb_e.py
 logbexp/algorithms/ofulogplus.py
 logbexp/algorithms/ofulogr.py
 logbexp/algorithms/ol2m.py
-logbexp/algorithms/rs_glinucb.py
+logbexp/algorithms/rs_glincb.py
 logbexp/bandit/__init__.py
 logbexp/bandit/arm_set.py
 logbexp/bandit/logistic_env.py

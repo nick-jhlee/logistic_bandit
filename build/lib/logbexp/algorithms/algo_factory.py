@@ -8,8 +8,9 @@ from logbexp.algorithms.ofulogplus import OFULogPlus
 from logbexp.algorithms.ofuglb import OFUGLB
 from logbexp.algorithms.ofuglb_e import OFUGLBe
 from logbexp.algorithms.rs_glincb import RS_GLinCB
+from logbexp.algorithms.emk import EMK
 
-ALGOS = ['RS-GLinCB', 'OFUGLB-e', 'OFUGLB', 'OFULogPlus', 'adaECOLog', 'OFULog-r', 'LogUCB1', 'OL2M', 'GLOC', 'GLM-UCB']
+ALGOS = ['EMK', 'RS-GLinCB', 'OFUGLB-e', 'OFUGLB', 'OFULogPlus', 'adaECOLog', 'OFULog-r', 'LogUCB1', 'OL2M', 'GLOC', 'GLM-UCB']
 
 
 def create_algo(config):
@@ -85,6 +86,14 @@ def create_algo(config):
                        horizon=config["horizon"],
                        plot_confidence=config["plot_confidence"],
                        N_confidence=config["N_confidence"])
+    elif config["algo_name"] == 'EMK':
+        algo = EMK(param_norm_ub=config["param_norm_ub"],
+                         arm_norm_ub=config["arm_norm_ub"],
+                         dim=config["dim"],
+                         failure_level=config["failure_level"],
+                         horizon=config["horizon"],
+                         plot_confidence=config["plot_confidence"],
+                         N_confidence=config["N_confidence"])
     if algo is None:
         raise ValueError("Oops. The algorithm {} is not implemented. You must choose within ({})".format(
             config["algo_name"], ''.join(['\'' + elem + '\'' + ', ' for elem in ALGOS])))

@@ -15,19 +15,16 @@ log_loss_hat : float
 ctr : int
     counter for lazy updates
 """
-import warnings
-
-import numpy as np
-import cvxpy as cp
-from scipy.optimize import minimize, NonlinearConstraint
 
 import math
 
+import numpy as np
+from scipy.optimize import minimize
+import cvxpy as cp
+from cvxpygen import cpg
+import warnings
+
 from logbexp.algorithms.logistic_bandit_algo import LogisticBandit
-
-
-def logistic(z):
-    return np.log(1 + np.exp(z))
 
 
 def mu(z):
@@ -45,7 +42,7 @@ class OFUGLBe(LogisticBandit):
         :param lazy_update_fr:  integer dictating the frequency at which to do the learning if we want the algo to be lazy (default: 1)
         """
         super().__init__(param_norm_ub, arm_norm_ub, dim, failure_level)
-        self.name = 'OFUGLB-e'
+        self.name = 'OFUGLBe'
         self.lazy_update_fr = lazy_update_fr
         # initialize some learning attributes
         self.theta_hat = np.random.normal(0, 1, (self.dim, 1))
@@ -76,21 +73,14 @@ class OFUGLBe(LogisticBandit):
         self.arms.append(arm)
         self.rewards.append(reward)
 
-        ## apparently, this is more inefficient than SciPy's SLSQP
-        ## norm-constrained convex optim for MLE
-        # theta_mle = cp.Variable((self.dim, 1))
-        # theta_mle.value = self.theta_hat
-        # constraint_mle = [cp.norm(theta_mle, 2) <= self.param_norm_ub]
-        # objective_mle = cp.Minimize(self.neg_log_likelihood(theta_mle))
-        # problem_mle = cp.Problem(objective_mle, constraint_mle)
-        # problem_mle.solve(solver=cp.SCS, warm_start=True)
-        # self.theta_hat = theta_mle.value
-
-        obj = lambda theta: self.neg_log_likelihood_np(theta)
-        cstrf_norm = lambda theta: np.linalg.norm(theta)
-        constraint_norm = NonlinearConstraint(cstrf_norm, 0, self.param_norm_ub)
-        opt = minimize(obj, x0=np.reshape(self.theta_hat, (-1,)), method='SLSQP', constraints=[constraint_norm])
-        # , options={'maxiter': 20}
+        ## SLSQP
+        ineq_cons = {'type': 'ineq',
+                     'fun': lambda theta: np.array([
+                         self.param_norm_ub ** 2 - np.dot(theta, theta)]),
+                     'jac': lambda theta: 2 * np.array([- theta])}
+        opt = minimize(self.neg_log_likelihood_full, x0=np.reshape(self.theta_hat, (-1,)), method='SLSQP',
+                       jac=self.neg_log_likelihood_full_J,
+                       constraints=ineq_cons)
         self.theta_hat = opt.x
         # update regularized Ht
         self.Ht = ((1 + self.param_norm_ub) / (2 * self.param_norm_ub ** 2)) * np.eye(self.dim)
@@ -101,7 +91,7 @@ class OFUGLBe(LogisticBandit):
 
     def pull(self, arm_set):
         self.update_ucb_bonus()
-        self.log_loss_hat = self.neg_log_likelihood_np(self.theta_hat)
+        self.log_loss_hat = self.neg_log_likelihood_full(self.theta_hat)
         arm = np.reshape(arm_set.argmax(self.compute_optimistic_reward), (-1,))
         return arm
 
@@ -113,78 +103,69 @@ class OFUGLBe(LogisticBandit):
         self.ucb_bonus = 2 * (1 + self.param_norm_ub) * (1 + beta_t2)
 
     def compute_optimistic_reward(self, arm):
-        arm_res = np.reshape(arm, (-1, 1))
         if self.ctr <= 1:
             res = np.random.normal(0, 1)
         else:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                theta = cp.Variable((self.dim, 1))
-                constraints = [cp.norm(theta, 2) <= self.param_norm_ub,
-                               cp.quad_form(theta - np.reshape(self.theta_hat, (-1, 1)), self.Ht) <= self.ucb_bonus]
-                objective = cp.Maximize(cp.sum(cp.multiply(theta, arm_res)))
-                problem = cp.Problem(objective, constraints)
-                problem.solve()
-                res = problem.value
-                if problem.status != 'optimal':
-                    # print("WARNING: CVXPY failed to solve the problem. Using SLSQP instead.")
-                    ## for ellipsoid, cvxpy is much more efficient
-                    ## use SLSQP only when the solver is potentially inaccurate
-                    obj = lambda theta: -np.sum(arm * theta)
-                    cstrf = lambda theta: (theta - self.theta_hat).T @ self.Ht @ (theta - self.theta_hat)
-                    cstrf_norm = lambda theta: np.linalg.norm(theta, 2)
-                    constraint = NonlinearConstraint(cstrf, 0, self.ucb_bonus)
-                    constraint_norm = NonlinearConstraint(cstrf_norm, 0, self.param_norm_ub)
-                    opt = minimize(obj, x0=np.reshape(self.theta_hat, (-1,)), method='SLSQP',
-                                   constraints=[constraint, constraint_norm])
-                    # # , options={'maxiter': 20}
-                    res = np.sum(arm * opt.x)
+            ## CVXPY (splitting conic solver, SCS)
+            arm_res = np.reshape(arm, (-1, 1))
+            theta_cvxpy = cp.Variable((self.dim, 1))
+            theta_cvxpy.value = np.reshape(self.theta_hat, (-1, 1))
+            constraints = [cp.norm(theta_cvxpy, 2) <= self.param_norm_ub,
+                           # cp.sum_squares(theta_cvxpy) <= self.param_norm_ub ** 2,
+                           cp.quad_form(theta_cvxpy - np.reshape(self.theta_hat, (-1, 1)), self.Ht) <= self.ucb_bonus]
+            problem = cp.Problem(cp.Maximize(cp.sum(cp.multiply(theta_cvxpy, arm_res))), constraints)
+            # cpg.generate_code(problem, code_dir='MLE', solver='SCS')
+            # from MLE.cpg_solver import cpg_solve
+            # problem.register_solve('CPG', cpg_solve)
+            # problem.solve(method='CPG', warm_start=True)
+            problem.solve(solver=cp.SCS, warm_start=True)
+            res = problem.value
+            if problem.status != 'optimal':
+                warnings.warn(f"CVXPY failed to converge with status {problem.status}.. using SLSQP")
+                ## SLSQP
+                obj = lambda theta: -np.sum(arm * theta)
+                obj_J = lambda theta: -arm
+                ineq_cons = {'type': 'ineq',
+                             'fun': lambda theta: np.array([
+                                 self.ucb_bonus - (theta - self.theta_hat).T @ self.Ht @ (theta - self.theta_hat),
+                                 self.param_norm_ub ** 2 - np.dot(theta, theta)]),
+                             'jac': lambda theta: 2 * np.array([self.Ht @ (theta - self.theta_hat), - theta])}
+                opt = minimize(obj, x0=self.theta_hat, method='SLSQP', jac=obj_J, constraints=ineq_cons)
+                res = np.sum(arm * opt.x)
+
+            ## Trust-Regions Constrained Optim (scipy.optimize)
+            # obj = lambda theta: -np.sum(arm * theta)
+            # obj_J = lambda theta: -arm
+            # obj_H = lambda theta: np.zeros((self.dim, self.dim))
+            # cons_f = lambda theta: [np.dot(theta, theta), (theta - self.theta_hat).T @ self.Ht @ (theta - self.theta_hat)]
+            # cons_J = lambda theta: [2 * theta, 2 * (theta - self.theta_hat) @ self.Ht]
+            # cons_H = lambda theta, v: 2*(v[0] * np.eye(self.dim) + v[1] * self.Ht)
+            # constraints_scipy = NonlinearConstraint(cons_f, -np.inf, [self.param_norm_ub ** 2, self.ucb_bonus], jac=cons_J, hess=cons_H)
+            # opt = minimize(obj, x0=self.theta_hat, method='trust-constr', jac=obj_J, hess=obj_H, constraints=constraints_scipy)
+            # res = np.sum(arm * opt.x)
 
             ## plot confidence set
             if self.plot and len(self.rewards) == self.T - 2:
                 ## store data
                 interact_rng = np.linspace(-self.param_norm_ub - 0.5, self.param_norm_ub + 0.5, self.N)
                 x, y = np.meshgrid(interact_rng, interact_rng)
-                f = lambda x, y: self.logistic_loss_seq(np.array([x, y])) - self.log_loss_hat
+                f = lambda x, y: (np.array([x, y]) - self.theta_hat).T @ self.Ht @ (np.array([x, y]) - self.theta_hat)
                 z = (f(x, y) <= self.ucb_bonus) & (np.linalg.norm(np.array([x, y]), axis=0) <= self.param_norm_ub)
                 z = z.astype(int)
-                with open(f"S={self.param_norm_ub}/OFUGLBe.npz", "wb") as file:
+                with open(f"S={self.param_norm_ub}/{self.name}.npz", "wb") as file:
                     np.savez(file, theta_hat=self.theta_hat, x=x, y=y, z=z)
         return res
 
-    def neg_log_likelihood(self, theta):
-        """
-        Computes the full log-loss estimated at theta
-        """
-        if len(self.rewards) == 0:
-            return 0
-        else:
-            X = np.array(self.arms)
-            r = np.array(self.rewards).reshape((-1, 1))
-            theta = theta.reshape((-1, 1))
-            # print(X.shape, r.shape)
-            return cp.sum(cp.multiply(r, cp.logistic(-X @ theta)) + cp.multiply((1 - r), cp.logistic(X @ theta)))
-
-    def neg_log_likelihood_np(self, theta):
-        """
-        Computes the full log-loss estimated at theta
-        """
-        if len(self.rewards) == 0:
-            return 0
-        else:
-            X = np.array(self.arms)
-            r = np.array(self.rewards).reshape((-1, 1))
-            theta = theta.reshape((-1, 1))
-            # print(X.shape, r.shape)
-            return np.sum(r * logistic(-X @ theta) + (1 - r) * logistic(X @ theta))
-
-    def logistic_loss_seq(self, theta):
-        res = 0
-        for s, r in enumerate(self.rewards):
-            mu_s = 1 / (1 + np.exp(-np.tensordot(self.arms[s].reshape((self.dim, 1)), theta, axes=([0], [0]))))
-            # mu_s = np.clip(mu_s, 1e-12, 1 - 1e-12)
-            if r == 0:
-                res += -(1 - r) * np.log(1 - mu_s)
-            else:
-                res += -r * np.log(mu_s)
-        return res.squeeze()
+    # def neg_log_likelihood_cp(self, theta):
+    #     """
+    #     Computes the full log-loss estimated at theta
+    #     CVXPY version
+    #     """
+    #     if len(self.rewards) == 0:
+    #         return 0
+    #     else:
+    #         X = np.array(self.arms)
+    #         r = np.array(self.rewards).reshape((-1, 1))
+    #         theta = theta.reshape((-1, 1))
+    #         # print(X.shape, r.shape)
+    #         return cp.sum(cp.multiply(r, cp.logistic(-X @ theta)) + cp.multiply((1 - r), cp.logistic(X @ theta)))

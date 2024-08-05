@@ -135,7 +135,7 @@ class OFULogr(LogisticBandit):
                 f = lambda x, y: self.logistic_loss_seq(np.array([x, y])) - self.log_loss_hat
                 z = (f(x, y) <= self.ucb_bonus) & (np.linalg.norm(np.array([x, y]), axis=0) <= self.param_norm_ub)
                 z = z.astype(int)
-                np.savez(f"S={self.param_norm_ub}/OFULogr.npz", x=x, y=y, z=z, theta_hat=self.theta_hat)
+                np.savez(f"S={self.param_norm_ub}/{self.name}.npz", x=x, y=y, z=z, theta_hat=self.theta_hat)
         return res
 
     def neg_log_likelihood_np(self, theta):
