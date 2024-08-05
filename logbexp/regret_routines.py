@@ -9,6 +9,7 @@ from logbexp.algorithms.algo_factory import create_algo
 from logbexp.bandit.logistic_env import create_env
 from joblib import Parallel, delayed
 from tqdm import tqdm
+from time import perf_counter
 
 
 
@@ -19,12 +20,15 @@ def one_bandit_exp(config):
     regret_array = np.empty(horizon)
     kappa_inv_array = np.empty(horizon)
     # let's go
+    t_start = perf_counter()
     for t in tqdm(range(horizon)):
         arm = algo.pull(env.arm_set)
         reward, regret, kappa_inv = env.interact(arm)
         regret_array[t] = regret
         kappa_inv_array[t] = kappa_inv
         algo.learn(arm, reward)
+    t_stop = perf_counter()
+    print(algo.name, t_stop - t_start)
     return (regret_array, 1 / np.mean(kappa_inv_array, axis=0))
 
 

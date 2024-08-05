@@ -2,7 +2,7 @@
 Created on 2024.08.03
 @author: nicklee
 
-Class for the ellipsoidal OFUGLB of [Lee et al., arXiv'24]. Inherits from the LogisticBandit class.
+Class for the OFUGLB-e (ellipsoidal OFUGLB) of [Lee et al., arXiv'24]. Inherits from the LogisticBandit class.
 
 Additional Attributes
 ---------------------
@@ -42,7 +42,7 @@ class OFUGLBe(LogisticBandit):
         :param lazy_update_fr:  integer dictating the frequency at which to do the learning if we want the algo to be lazy (default: 1)
         """
         super().__init__(param_norm_ub, arm_norm_ub, dim, failure_level)
-        self.name = 'OFUGLBe'
+        self.name = 'OFUGLB-e'
         self.lazy_update_fr = lazy_update_fr
         # initialize some learning attributes
         self.theta_hat = np.random.normal(0, 1, (self.dim, 1))

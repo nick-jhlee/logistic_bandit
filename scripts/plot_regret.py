@@ -101,6 +101,15 @@ plt.legend(loc='upper left', prop={'size': 19})
 plt.tight_layout()
 plt.tick_params(axis='both', which='major', labelsize=15)
 plt.tick_params(axis='both', which='minor', labelsize=15)
+## hard coding y-axis limits
+if S == 4 or S == 6:
+    plt.ylim([0, 200])
+elif S == 8:
+    plt.ylim([0, 500])
+elif S == 10:
+    plt.ylim([0, 1000])
+else:
+    pass
 plt.savefig(f"S={S}/{arm_set_type}/regret_S={S}_h={H}.pdf", dpi=300)
 plt.savefig(f"S={S}/{arm_set_type}/regret_S={S}_h={H}.png", dpi=300)
 plt.show()
