@@ -25,10 +25,6 @@ from scipy.optimize import minimize
 from logbexp.algorithms.logistic_bandit_algo import LogisticBandit
 
 
-def logistic(z):
-    return np.log(1 + np.exp(z))
-
-
 def mu(z):
     return 1 / (1 + np.exp(-z))
 

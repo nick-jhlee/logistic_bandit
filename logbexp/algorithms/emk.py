@@ -39,7 +39,9 @@ def VAW_regularizer_J(arm, theta):
     """
     Computes the gradient of VAW_regularizer
     """
-    return 2 * theta + mu(np.dot(arm, theta)) * arm
+    arm_res = np.reshape(arm, (-1, 1))
+    theta_res = np.reshape(theta, (-1, 1))
+    return 2 * theta_res + mu(np.dot(arm, theta)) * arm_res
 
 
 class EMK(LogisticBandit):
@@ -52,13 +54,23 @@ class EMK(LogisticBandit):
         self.name = 'EMK'
         self.lazy_update_fr = lazy_update_fr
         # initialize some learning attributes
+        self.arms = []
+        self.rewards = []
         self.theta_hat = np.random.normal(0, 1, (self.dim, 1))
-        self.ctr = 0
-        self.ucb_bonus = 0
+        self.ctr = 1
         self.log_loss_hat = 0
         self.plot = plot_confidence
         self.N = N_confidence
         self.T = horizon
+
+        self.weighted_log_hat = 0
+        self.theta_hats = []
+        self.weights = []
+        self.L = 1 / 4  # for Bernoulli, L = 1/4
+        self.l2reg = 1
+        self.V_inv = self.l2reg * np.eye(self.dim)
+        # compute an upper bound on kappa (denoted as mu in Emmenegger et al. (2023))
+        self.kappa = 3 + np.exp(param_norm_ub)
 
     def reset(self):
         """
@@ -76,29 +88,33 @@ class EMK(LogisticBandit):
         self.arms.append(arm)
         self.rewards.append(reward)
 
-        ## Vovk-Azoury-Warmuth predictor (see their Theorem 5), implemented with SLSQP
+        # Sherman-Morrison formula
+        self.V_inv -= (self.kappa * np.outer(self.V_inv @ arm, self.V_inv @ arm)
+                       / (1 + self.kappa * arm.T @ self.V_inv @ arm))
+
+        # Vovk-Azoury-Warmuth predictor (see their Theorem 5), implemented with SLSQP
         ineq_cons = {'type': 'ineq',
-                     'fun': lambda theta: np.array([
-                         self.param_norm_ub ** 2 - np.dot(theta, theta)]),
+                     'fun': lambda theta: np.array([self.param_norm_ub ** 2 - np.dot(theta, theta)]),
                      'jac': lambda theta: 2 * np.array([- theta])}
-        opt = minimize(self.neg_log_likelihood_full, x0=np.reshape(self.theta_hat, (-1,)), method='SLSQP',
-                       jac=self.neg_log_likelihood_J,
+        obj = lambda theta: self.neg_log_likelihood_full(theta) + VAW_regularizer(arm, theta)
+        obj_J = lambda theta: self.neg_log_likelihood_full_J(theta) + VAW_regularizer_J(arm, theta)
+        opt = minimize(obj, x0=np.reshape(self.theta_hat, (-1,)), method='SLSQP', jac=obj_J,
                        constraints=ineq_cons)
         self.theta_hat = opt.x
+        self.theta_hats.append(self.theta_hat)
+
+        # update weighting (Theorem 2)
+        bias2 = 2 * self.l2reg * self.param_norm_ub ** 2 * arm.T @ self.V_inv @ arm
+        self.weights.append(1 / (1 + self.L * bias2))
+
+        self.weighted_log_hat += self.weights[-1] * self.neg_log_likelihood(self.theta_hat, [arm], [reward])
+
         # update counter
         self.ctr += 1
 
     def pull(self, arm_set):
-        self.update_ucb_bonus()
-        self.log_loss_hat = self.neg_log_likelihood_full(self.theta_hat)
         arm = np.reshape(arm_set.argmax(self.compute_optimistic_reward), (-1,))
         return arm
-
-    # see Theorem 3.1
-    def update_ucb_bonus(self):
-        Lt = (1 + self.param_norm_ub / 2) * (len(self.rewards) - 1)
-        self.ucb_bonus = np.log(1 / self.failure_level) + self.dim * np.log(
-            max(math.e, 2 * math.e * self.param_norm_ub * Lt / self.dim))
 
     def compute_optimistic_reward(self, arm):
         if self.ctr <= 1:
@@ -109,9 +125,9 @@ class EMK(LogisticBandit):
             obj_J = lambda theta: -arm
             ineq_cons = {'type': 'ineq',
                          'fun': lambda theta: np.array([
-                             self.ucb_bonus - (self.neg_log_likelihood_full(theta) - self.log_loss_hat),
+                             np.log(1 / self.failure_level) - (self.neg_log_likelihood_sequential(theta) - self.weighted_log_hat),
                              self.param_norm_ub ** 2 - np.dot(theta, theta)]),
-                         'jac': lambda theta: - np.vstack((self.neg_log_likelihood_full_J(theta).T, 2 * theta))}
+                         'jac': lambda theta: - np.vstack((self.neg_log_likelihood_sequential_J(theta).T, 2 * theta))}
             opt = minimize(obj, x0=self.theta_hat, method='SLSQP', jac=obj_J, constraints=ineq_cons)
             res = np.sum(arm * opt.x)
 
@@ -140,23 +156,37 @@ class EMK(LogisticBandit):
                 ## store data
                 interact_rng = np.linspace(-self.param_norm_ub - 0.5, self.param_norm_ub + 0.5, self.N)
                 x, y = np.meshgrid(interact_rng, interact_rng)
-                f = lambda x, y: self.logistic_loss_seq(np.array([x, y])) - self.log_loss_hat
-                z = (f(x, y) <= self.ucb_bonus) & (np.linalg.norm(np.array([x, y]), axis=0) <= self.param_norm_ub)
+                f = lambda x, y: self.neg_log_likelihood_sequential(np.array([x, y])) - self.weighted_log_hat
+                z = (f(x, y) <= np.log(1 / self.failure_level)) & (np.linalg.norm(np.array([x, y]), axis=0) <= self.param_norm_ub)
                 z = z.astype(int)
                 with open(f"S={self.param_norm_ub}/{self.name}.npz", "wb") as file:
                     np.savez(file, theta_hat=self.theta_hat, x=x, y=y, z=z)
         return res
 
-    # def neg_log_likelihood_cp(self, theta):
-    #     """
-    #     Computes the full log-loss estimated at theta
-    #     CVXPY version
-    #     """
-    #     if len(self.rewards) == 0:
-    #         return 0
-    #     else:
-    #         X = np.array(self.arms)
-    #         r = np.array(self.rewards).reshape((-1, 1))
-    #         theta = theta.reshape((-1, 1))
-    #         # print(X.shape, r.shape)
-    #         return cp.sum(cp.multiply(r, cp.logistic(-X @ theta)) + cp.multiply((1 - r), cp.logistic(X @ theta)))
+    def neg_log_likelihood_sequential(self, theta):
+        """
+        Computes the full, weighted negative log likelihood at theta
+        """
+        if len(self.rewards) == 0:
+            return 0
+        else:
+            X = np.array(self.arms)
+            r = np.array(self.rewards).reshape((-1, 1))
+            theta = theta.reshape((-1, 1))
+            weights = np.array(self.weights).reshape((-1, 1))
+            # print(X.shape, r.shape)
+            return - np.sum(weights * (r * np.log(mu(X @ theta)) + (1 - r) * np.log(mu(- X @ theta))))
+
+    def neg_log_likelihood_sequential_J(self, theta):
+        """
+        Derivative of neg_log_likelihood_sequential
+        """
+        if len(self.rewards) == 0:
+            return np.zeros((self.dim, 1))
+        else:
+            X = np.array(self.arms)
+            r = np.array(self.rewards).reshape((-1, 1))
+            theta = theta.reshape((-1, 1))
+            weights = np.array(self.weights).reshape((-1, 1))
+            # print(X.shape, r.shape)
+            return np.sum(weights * ((mu(X @ theta) - r) * X), axis=0).reshape((self.dim, 1))

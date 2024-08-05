@@ -21,7 +21,7 @@ import math
 import numpy as np
 from scipy.optimize import minimize
 import cvxpy as cp
-from cvxpygen import cpg
+# from cvxpygen import cpg
 import warnings
 
 from logbexp.algorithms.logistic_bandit_algo import LogisticBandit
