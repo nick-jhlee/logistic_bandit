@@ -15,8 +15,6 @@ log_loss_hat : float
 ctr : int
     counter for lazy updates
 """
-import math
-
 import numpy as np
 from scipy.optimize import minimize
 
@@ -45,13 +43,14 @@ def VAW_regularizer_J(arm, theta):
 
 
 class EMK(LogisticBandit):
-    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, lazy_update_fr=1, plot_confidence=False,
+    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, arm_set_type="tv_discrete", lazy_update_fr=1, plot_confidence=False,
                  N_confidence=1000):
         """
         :param lazy_update_fr:  integer dictating the frequency at which to do the learning if we want the algo to be lazy (default: 1)
         """
         super().__init__(param_norm_ub, arm_norm_ub, dim, failure_level)
         self.name = 'EMK'
+        self.arm_set_type = arm_set_type
         self.lazy_update_fr = lazy_update_fr
         # initialize some learning attributes
         self.arms = []
@@ -160,10 +159,11 @@ class EMK(LogisticBandit):
                 Z = ((f(X, Y) <= np.log(1 / self.failure_level))
                      & (np.linalg.norm(np.array([X, Y]), axis=0) <= self.param_norm_ub))
                 Z = Z.astype(int)
-                with open(f"S={self.param_norm_ub}/{self.name}.npz", "wb") as file:
-                    np.savez(file, theta_hat=self.theta_hat, x=X, y=Y, z=Z)
+                self.save_npz(X, Y, Z, self.theta_hat)
         return res
+    
 
+    ## Redefined to be adapted to the weighted, sequential setting!!
     def neg_log_likelihood_sequential(self, theta):
         """
         Computes the full, weighted negative log likelihood at theta
@@ -196,7 +196,7 @@ class EMK(LogisticBandit):
         """
         Computes the full, weighted negative log likelihood at theta
         Taylor made for plotting
-        grid : (2, N, N)
+        grid : (d, N, N)
         """
         if len(self.rewards) == 0:
             return 0

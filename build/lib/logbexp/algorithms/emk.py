@@ -15,7 +15,7 @@ log_loss_hat : float
 ctr : int
     counter for lazy updates
 """
-import math
+import os
 
 import numpy as np
 from scipy.optimize import minimize
@@ -160,10 +160,15 @@ class EMK(LogisticBandit):
                 Z = ((f(X, Y) <= np.log(1 / self.failure_level))
                      & (np.linalg.norm(np.array([X, Y]), axis=0) <= self.param_norm_ub))
                 Z = Z.astype(int)
-                with open(f"S={self.param_norm_ub}/{self.name}.npz", "wb") as file:
+                path = f"S={self.param_norm_ub}/tv_discrete"
+                if not os.path.exists(path):
+                    os.makedirs(path)
+                with open(f"{path}/{self.name}.npz", "wb") as file:
                     np.savez(file, theta_hat=self.theta_hat, x=X, y=Y, z=Z)
         return res
+    
 
+    ## Redefined to be adapted to the weighted, sequential setting!!
     def neg_log_likelihood_sequential(self, theta):
         """
         Computes the full, weighted negative log likelihood at theta
@@ -196,7 +201,7 @@ class EMK(LogisticBandit):
         """
         Computes the full, weighted negative log likelihood at theta
         Taylor made for plotting
-        grid : (2, N, N)
+        grid : (d, N, N)
         """
         if len(self.rewards) == 0:
             return 0

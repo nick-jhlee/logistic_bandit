@@ -90,7 +90,7 @@ class LogisticBandit(object):
         """
         Computes the full negative log likelihood at theta
         Taylor made for plotting
-        grid : (2, N, N)
+        grid : (d, N, N)
         """
         if len(self.rewards) == 0:
             return 0
@@ -100,17 +100,3 @@ class LogisticBandit(object):
             tmp1 = np.einsum('t,tij->ij', np.array(self.rewards), np.log(sigmoid(tmp)))
             tmp2 = np.einsum('t,tij->ij', (1 - np.array(self.rewards)), np.log(sigmoid(-tmp)))
             return - tmp1 - tmp2
-
-    def logistic_loss_seq(self, theta):
-        """
-        For plotting the CS
-        """
-        res = 0
-        for s, r in enumerate(self.rewards):
-            mu_s = 1 / (1 + np.exp(-np.tensordot(self.arms[s].reshape((self.dim, 1)), theta, axes=([0], [0]))))
-            # mu_s = np.clip(mu_s, 1e-12, 1 - 1e-12)
-            if r == 0:
-                res += -(1 - r) * np.log(1 - mu_s)
-            else:
-                res += -r * np.log(mu_s)
-        return res.squeeze()

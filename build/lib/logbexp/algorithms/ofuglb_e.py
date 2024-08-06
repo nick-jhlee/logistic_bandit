@@ -17,6 +17,7 @@ ctr : int
 """
 
 import math
+import os
 
 import numpy as np
 from scipy.optimize import minimize
@@ -153,7 +154,10 @@ class OFUGLBe(LogisticBandit):
                 Z = (np.einsum('kij,kl,lij->ij', tmp, self.Ht, tmp) <= self.ucb_bonus) & (
                         np.linalg.norm(np.array([X, Y]), axis=0) <= self.param_norm_ub)
                 Z = Z.astype(int)
-                with open(f"S={self.param_norm_ub}/{self.name}.npz", "wb") as file:
+                path = f"S={self.param_norm_ub}/tv_discrete"
+                if not os.path.exists(path):
+                    os.makedirs(path)
+                with open(f"{path}/{self.name}.npz", "wb") as file:
                     np.savez(file, theta_hat=self.theta_hat, x=X, y=Y, z=Z)
         return res
 

@@ -28,13 +28,14 @@ def mu(z):
 
 
 class OFUGLB(LogisticBandit):
-    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, lazy_update_fr=1, plot_confidence=False,
+    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, arm_set_type="tv_discrete", lazy_update_fr=1, plot_confidence=False,
                  N_confidence=1000):
         """
         :param lazy_update_fr:  integer dictating the frequency at which to do the learning if we want the algo to be lazy (default: 1)
         """
         super().__init__(param_norm_ub, arm_norm_ub, dim, failure_level)
         self.name = 'OFUGLB'
+        self.arm_set_type = arm_set_type
         self.lazy_update_fr = lazy_update_fr
         # initialize some learning attributes
         self.theta_hat = np.random.normal(0, 1, (self.dim, 1))
@@ -124,12 +125,11 @@ class OFUGLB(LogisticBandit):
             if self.plot and len(self.rewards) == self.T - 2:
                 ## store data
                 interact_rng = np.linspace(-self.param_norm_ub - 0.5, self.param_norm_ub + 0.5, self.N)
-                x, y = np.meshgrid(interact_rng, interact_rng)
-                f = lambda x, y: self.logistic_loss_seq(np.array([x, y])) - self.log_loss_hat
-                z = (f(x, y) <= self.ucb_bonus) & (np.linalg.norm(np.array([x, y]), axis=0) <= self.param_norm_ub)
-                z = z.astype(int)
-                with open(f"S={self.param_norm_ub}/{self.name}.npz", "wb") as file:
-                    np.savez(file, theta_hat=self.theta_hat, x=x, y=y, z=z)
+                X, Y = np.meshgrid(interact_rng, interact_rng)
+                f = lambda x, y: self.neg_log_likelihood_plotting(np.array([x, y])) - self.log_loss_hat
+                Z = (f(X, Y) <= self.ucb_bonus) & (np.linalg.norm(np.array([X, Y]), axis=0) <= self.param_norm_ub)
+                Z = Z.astype(int)
+                self.save_npz(X, Y, Z, self.theta_hat)
         return res
 
     # def neg_log_likelihood_cp(self, theta):
