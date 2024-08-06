@@ -26,22 +26,18 @@ def mu(z):
 
 
 class OFULogPlus(LogisticBandit):
-    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, arm_set_type="tv_discrete", lazy_update_fr=1, plot_confidence=False,
-                 N_confidence=500):
+    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, lazy_update_fr=1):
         """
         :param lazy_update_fr:  integer dictating the frequency at which to do the learning if we want the algo to be lazy (default: 1)
         """
         super().__init__(param_norm_ub, arm_norm_ub, dim, failure_level)
         self.name = 'OFULogPlus'
-        self.arm_set_type = arm_set_type
         self.lazy_update_fr = lazy_update_fr
         # initialize some learning attributes
         self.theta_hat = np.random.normal(0, 1, (self.dim,))
         self.ctr = 0
         self.ucb_bonus = 0
         self.log_loss_hat = 0
-        self.plot = plot_confidence
-        self.N = N_confidence
         self.T = horizon
 
     def reset(self):

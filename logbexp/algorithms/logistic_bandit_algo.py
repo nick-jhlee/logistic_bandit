@@ -97,7 +97,24 @@ class LogisticBandit(object):
             return 0
         else:
             X = np.array(self.arms)
-            tmp = np.einsum('td,dij->tij', X, grid)
-            tmp1 = np.einsum('t,tij->ij', np.array(self.rewards), np.log(sigmoid(tmp)))
-            tmp2 = np.einsum('t,tij->ij', (1 - np.array(self.rewards)), np.log(sigmoid(-tmp)))
-            return - tmp1 - tmp2
+            rewards = np.array(self.rewards)
+
+            # Initialize the result arrays
+            tmp1_sum = np.zeros((grid.shape[1], grid.shape[2]))
+            tmp2_sum = np.zeros((grid.shape[1], grid.shape[2]))
+
+            # Split arrays into chunks to include the remainder
+            chunk_size = 100  # Adjust this based on your memory capacity
+            num_sections = np.ceil(X.shape[0] / chunk_size)
+            X_chunks = np.array_split(X, num_sections)
+            rewards_chunks = np.array_split(rewards, num_sections)
+
+            for X_chunk, rewards_chunk in zip(X_chunks, rewards_chunks):
+                tmp_chunk = np.einsum('td,dij->tij', X_chunk, grid)
+                tmp1_chunk = np.einsum('t,tij->ij', rewards_chunk, np.log(sigmoid(tmp_chunk)))
+                tmp2_chunk = np.einsum('t,tij->ij', (1 - rewards_chunk), np.log(sigmoid(-tmp_chunk)))
+
+                tmp1_sum += tmp1_chunk
+                tmp2_sum += tmp2_chunk
+
+            return - tmp1_sum - tmp2_sum

@@ -94,8 +94,8 @@ clrs = sns.color_palette("husl", 4)
 with sns.axes_style("whitegrid"):
     for i, algorithm in enumerate(["OFUGLB", "OFUGLB-e", "RS-GLinCB", "OFULogPlus", "EMK", "adaECOLog"]):
         alg_name = alg_dict[algorithm]
-        regret = res_dict_mean[algorithm][:1000]
-        std = res_dict_std[algorithm][:1000]
+        regret = res_dict_mean[algorithm]
+        std = res_dict_std[algorithm]
         plt.plot(regret, label=alg_name, color=colors[i], alpha=alphas[i])
         plt.fill_between(range(len(regret)), regret - std, regret + std, alpha=0.3, color=colors[i])
 
@@ -106,7 +106,9 @@ plt.tight_layout()
 plt.tick_params(axis='both', which='major', labelsize=15)
 plt.tick_params(axis='both', which='minor', labelsize=15)
 ## hard coding y-axis limits
-if S == 4 or S == 6:
+if S == 4:
+    plt.ylim([0, 160])
+elif S == 6:
     plt.ylim([0, 200])
 elif S == 8:
     plt.ylim([0, 500])

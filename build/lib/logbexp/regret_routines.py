@@ -27,7 +27,7 @@ def one_bandit_exp(config, one_exp=False):
         algo.learn(arm, reward)
     t_stop = perf_counter()
     print(f"Runtime of {algo.name}: ", t_stop - t_start)
-    
+
     ## Plot, IF only one experiment is being run
     if one_exp and config["plot_confidence"]:
         N, S = config["N_confidence"], config["param_norm_ub"]
@@ -37,7 +37,7 @@ def one_bandit_exp(config, one_exp=False):
         if algo.name == "EMK":
             f = lambda x, y: algo.neg_log_likelihood_sequential_plotting(np.array([x, y])) - algo.weighted_log_loss_hat
             Z = ((f(X, Y) <= np.log(1 / algo.failure_level))
-                    & (np.linalg.norm(np.array([X, Y]), axis=0) <= S))
+                 & (np.linalg.norm(np.array([X, Y]), axis=0) <= S))
         elif algo.name == "OFUGLB-e":
             tmp = np.array([X, Y]) - algo.theta_hat.reshape(2, 1, 1)
             Z = (np.einsum('kij,kl,lij->ij', tmp, algo.Ht, tmp) <= algo.ucb_bonus) & (
@@ -55,8 +55,8 @@ def one_bandit_exp(config, one_exp=False):
             raise NotImplementedError(f"Plotting not implemented for {algo.name}")
         Z = Z.astype(int)
         save_npz(X, Y, Z, algo.theta_hat, S, config["arm_set_type"], algo.name)
-    
-    return (regret_array, 1 / np.mean(kappa_inv_array, axis=0))
+
+    return regret_array, 1 / np.mean(kappa_inv_array, axis=0)
 
 
 def many_bandit_exps(config):
@@ -76,7 +76,6 @@ def many_bandit_exps(config):
         kappa_inv = everything[1]
         cum_regret = np.cumsum(regret)
         return cum_regret, np.zeros(cum_regret.shape), kappa_inv
-
 
 
 def save_npz(X, Y, Z, theta_hat, S, ast, name):

@@ -119,7 +119,8 @@ class EMK(LogisticBandit):
             obj_J = lambda theta: -arm
             ineq_cons = {'type': 'ineq',
                          'fun': lambda theta: np.array([
-                             np.log(1 / self.failure_level) - (self.neg_log_likelihood_sequential(theta) - self.weighted_log_loss_hat),
+                             np.log(1 / self.failure_level) - (
+                                         self.neg_log_likelihood_sequential(theta) - self.weighted_log_loss_hat),
                              self.param_norm_ub ** 2 - np.dot(theta, theta)]),
                          'jac': lambda theta: - np.vstack((self.neg_log_likelihood_sequential_J(theta).T, 2 * theta))}
             opt = minimize(obj, x0=self.theta_hat, method='SLSQP', jac=obj_J, constraints=ineq_cons)
@@ -145,7 +146,6 @@ class EMK(LogisticBandit):
             #         # raise ValueError
             # res = problem.value
         return res
-    
 
     ## Redefined to be adapted to the weighted, sequential setting!!
     def neg_log_likelihood_sequential(self, theta):
@@ -186,9 +186,26 @@ class EMK(LogisticBandit):
             return 0
         else:
             X = np.array(self.arms)
-            tmp = np.einsum('td,dij->tij', X, grid)
             r_weights1 = np.array(self.rewards) * np.array(self.weights)
-            tmp1 = np.einsum('t,tij->ij', r_weights1, np.log(mu(tmp)))
             r_weights2 = (1 - np.array(self.rewards)) * np.array(self.weights)
-            tmp2 = np.einsum('t,tij->ij', r_weights2, np.log(mu(-tmp)))
-            return - tmp1 - tmp2
+
+            # Initialize the result arrays
+            tmp1_sum = np.zeros((grid.shape[1], grid.shape[2]))
+            tmp2_sum = np.zeros((grid.shape[1], grid.shape[2]))
+
+            # Split arrays into chunks to include the remainder
+            chunk_size = 100  # Adjust this based on your memory capacity
+            num_sections = np.ceil(X.shape[0] / chunk_size)
+            X_chunks = np.array_split(X, num_sections)
+            r_weights1_chunks = np.array_split(r_weights1, num_sections)
+            r_weights2_chunks = np.array_split(r_weights2, num_sections)
+
+            for X_chunk, r_weights1_chunk, r_weights2_chunk in zip(X_chunks, r_weights1_chunks, r_weights2_chunks):
+                tmp_chunk = np.einsum('td,dij->tij', X_chunk, grid)
+                tmp1_chunk = np.einsum('t,tij->ij', r_weights1_chunk, np.log(mu(tmp_chunk)))
+                tmp2_chunk = np.einsum('t,tij->ij', r_weights2_chunk, np.log(mu(-tmp_chunk)))
+
+                tmp1_sum += tmp1_chunk
+                tmp2_sum += tmp2_chunk
+
+            return - tmp1_sum - tmp2_sum

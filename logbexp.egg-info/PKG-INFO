@@ -85,7 +85,7 @@ The results in the paper can be obtained via `scripts/run_all.py`. This script r
 
 ## Plot results
 ### Regret curves
-You can use `scripts/plot_regret.py` to plot regret curves. This scripts plot regret curves for all logs in `scripts/logs/` that match the indicated dimension and parameter norm. 
+You can use `scripts/plot_regret.py` to plot the regret curve for a specific S. This scripts plot regret curves for all logs in `scripts/logs/` that match the indicated dimension and parameter norm. 
 
 ```
 usage: plot_regret.py [-h] [-d [D]] [-hz [HZ]] [-ast [AST]] [-pn [PN]]
@@ -100,9 +100,23 @@ optional arguments:
   -pn [PN]    Parameter norm (default: 9.0)
 ```
 
-Example output (S=10):
+You can use `scripts/plot_regret_total.py` to plot regret curves for all considered S's.
 
-<img src="./regret_fig.png" width="500" alt="">
+```
+usage: plot_regret_total.py [-h] [-d [D]] [-hz [HZ]] [-ast [AST]]
+
+Plot regret curves
+
+optional arguments:
+  -h, --help  show this help message and exit
+  -d [D]      Dimension (default: 2)
+  -hz [HZ]    Horizon length (default: 4000)
+  -ast [AST]  Dimension (default: tv_discrete)
+```
+
+Example output:
+
+<img src="./regret_fig.png" width="600" alt="">
 
 
 ### Confidence sets
