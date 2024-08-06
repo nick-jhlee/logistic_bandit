@@ -16,7 +16,6 @@ ctr : int
     counter for lazy updates
 """
 import math
-import os
 
 import numpy as np
 from scipy.optimize import minimize
@@ -29,8 +28,7 @@ def mu(z):
 
 
 class OFUGLB(LogisticBandit):
-    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, lazy_update_fr=1, plot_confidence=False,
-                 N_confidence=1000):
+    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, lazy_update_fr=1):
         """
         :param lazy_update_fr:  integer dictating the frequency at which to do the learning if we want the algo to be lazy (default: 1)
         """
@@ -42,8 +40,6 @@ class OFUGLB(LogisticBandit):
         self.ctr = 0
         self.ucb_bonus = 0
         self.log_loss_hat = 0
-        self.plot = plot_confidence
-        self.N = N_confidence
         self.T = horizon
 
     def reset(self):
@@ -120,20 +116,6 @@ class OFUGLB(LogisticBandit):
             #         problem.solve(tol_gap_rel=1e-4, verbose=True)
             #         # raise ValueError
             # res = problem.value
-
-            ## plot confidence set
-            if self.plot and len(self.rewards) == self.T - 2:
-                ## store data
-                interact_rng = np.linspace(-self.param_norm_ub - 0.5, self.param_norm_ub + 0.5, self.N)
-                X, Y = np.meshgrid(interact_rng, interact_rng)
-                f = lambda x, y: self.neg_log_likelihood_plotting(np.array([x, y])) - self.log_loss_hat
-                Z = (f(X, Y) <= self.ucb_bonus) & (np.linalg.norm(np.array([X, Y]), axis=0) <= self.param_norm_ub)
-                Z = Z.astype(int)
-                path = f"S={self.param_norm_ub}/tv_discrete"
-                if not os.path.exists(path):
-                    os.makedirs(path)
-                with open(f"{path}/{self.name}.npz", "wb") as file:
-                    np.savez(file, theta_hat=self.theta_hat, x=X, y=Y, z=Z)
         return res
 
     # def neg_log_likelihood_cp(self, theta):

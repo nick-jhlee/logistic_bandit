@@ -41,9 +41,11 @@ x, y = np.meshgrid(interact_rng, interact_rng)
 # fnames = ["adaECOLog.npz","OFULogr.npz", "OFULogPlus.npz"]
 # alg_names = ["ada-OFU-ECOLog", "OFULog-r", "OFULog+"]
 # colors = ['purple', 'green', 'red']
-fnames = ["OFUGLB.npz", "OFUGLB-e.npz", "EMK.npz", "OFULogPlus.npz"]
+# fnames = ["OFUGLB.npz", "OFUGLB-e.npz", "EMK.npz", "OFULogPlus.npz"]
+fnames = ["EMK.npz"]
+
 alg_names = ["OFUGLB", "OFUGLB-e", "EMK", "OFULog+"]
-colors = ['red', 'blue', 'orange', 'green']
+colors = ['red', 'orange', 'blue', 'green']
 
 tick_font_size = 24
 

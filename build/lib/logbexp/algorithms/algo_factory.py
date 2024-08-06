@@ -51,49 +51,37 @@ def create_algo(config):
                       arm_norm_ub=config["arm_norm_ub"],
                       dim=config["dim"],
                       failure_level=config["failure_level"],
-                      horizon=config["horizon"],
-                      plot_confidence=config["plot_confidence"],
-                      N_confidence=config["N_confidence"])
+                      horizon=config["horizon"])
     elif config["algo_name"] == 'OFULogPlus':
         algo = OFULogPlus(param_norm_ub=config["param_norm_ub"],
                           arm_norm_ub=config["arm_norm_ub"],
                           dim=config["dim"],
                           failure_level=config["failure_level"],
-                          horizon=config["horizon"],
-                          plot_confidence=config["plot_confidence"],
-                          N_confidence=config["N_confidence"])
+                          horizon=config["horizon"])
     elif config["algo_name"] == 'OFUGLB':
         algo = OFUGLB(param_norm_ub=config["param_norm_ub"],
                       arm_norm_ub=config["arm_norm_ub"],
                       dim=config["dim"],
                       failure_level=config["failure_level"],
-                      horizon=config["horizon"],
-                      plot_confidence=config["plot_confidence"],
-                      N_confidence=config["N_confidence"])
+                      horizon=config["horizon"])
     elif config["algo_name"] == 'OFUGLB-e':
         algo = OFUGLBe(param_norm_ub=config["param_norm_ub"],
                        arm_norm_ub=config["arm_norm_ub"],
                        dim=config["dim"],
                        failure_level=config["failure_level"],
-                       horizon=config["horizon"],
-                       plot_confidence=config["plot_confidence"],
-                       N_confidence=config["N_confidence"])
+                       horizon=config["horizon"])
     elif config["algo_name"] == 'RS-GLinCB':
         algo = RS_GLinCB(param_norm_ub=config["param_norm_ub"],
                        arm_norm_ub=config["arm_norm_ub"],
                        dim=config["dim"],
                        failure_level=config["failure_level"],
-                       horizon=config["horizon"],
-                       plot_confidence=config["plot_confidence"],
-                       N_confidence=config["N_confidence"])
+                       horizon=config["horizon"])
     elif config["algo_name"] == 'EMK':
         algo = EMK(param_norm_ub=config["param_norm_ub"],
                          arm_norm_ub=config["arm_norm_ub"],
                          dim=config["dim"],
                          failure_level=config["failure_level"],
-                         horizon=config["horizon"],
-                         plot_confidence=config["plot_confidence"],
-                         N_confidence=config["N_confidence"])
+                         horizon=config["horizon"])
     if algo is None:
         raise ValueError("Oops. The algorithm {} is not implemented. You must choose within ({})".format(
             config["algo_name"], ''.join(['\'' + elem + '\'' + ', ' for elem in ALGOS])))

@@ -85,11 +85,11 @@ plt.rcParams.update({
     # "font.sans-serif": ["Helvetica"],
     "font.size": 17})
 
-alg_dict = {"EMK": "EMK", "OFUGLB": "OFUGLB", "OFUGLB-e": "OFUGLB-e", "RS-GLinCB": "RS-GLinCB", "OFULogPlus": "OFULog+",
+alg_dict = {"OFUGLB": "OFUGLB", "OFUGLB-e": "OFUGLB-e", "EMK": "EMK", "RS-GLinCB": "RS-GLinCB", "OFULogPlus": "OFULog+",
             "adaECOLog": "ada-OFU-ECOLog"}
 
-alphas = [1, 0.5, 0.4, 0.4, 0.4, 0.4]
-colors = ['red', 'red', 'purple', 'green', 'orange', 'blue']
+alphas = [1, 1, 0.4, 0.4, 0.4, 0.4]
+colors = ['red', 'orange', 'blue', 'black', 'green', 'purple']
 clrs = sns.color_palette("husl", 4)
 with sns.axes_style("whitegrid"):
     for i, algorithm in enumerate(["OFUGLB", "OFUGLB-e", "RS-GLinCB", "OFULogPlus", "EMK", "adaECOLog"]):

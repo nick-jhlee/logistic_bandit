@@ -1,7 +1,7 @@
 """
 Helper functions for regret minimization
 """
-
+import os
 import numpy as np
 
 from logbexp.algorithms.algo_factory import create_algo
@@ -11,7 +11,7 @@ from tqdm import tqdm
 from time import perf_counter
 
 
-def one_bandit_exp(config):
+def one_bandit_exp(config, one_exp=False):
     env = create_env(config)
     algo = create_algo(config)
     horizon = config["horizon"]
@@ -26,7 +26,36 @@ def one_bandit_exp(config):
         kappa_inv_array[t] = kappa_inv
         algo.learn(arm, reward)
     t_stop = perf_counter()
-    print(algo.name, t_stop - t_start)
+    print(f"Runtime of {algo.name}: ", t_stop - t_start)
+    
+    ## Plot, IF only one experiment is being run
+    if one_exp and config["plot_confidence"]:
+        N, S = config["N_confidence"], config["param_norm_ub"]
+        ## store data
+        interact_rng = np.linspace(-S - 0.5, S + 0.5, N)
+        X, Y = np.meshgrid(interact_rng, interact_rng)
+        if algo.name == "EMK":
+            f = lambda x, y: algo.neg_log_likelihood_sequential_plotting(np.array([x, y])) - algo.weighted_log_loss_hat
+            Z = ((f(X, Y) <= np.log(1 / algo.failure_level))
+                    & (np.linalg.norm(np.array([X, Y]), axis=0) <= S))
+        elif algo.name == "OFUGLB-e":
+            tmp = np.array([X, Y]) - algo.theta_hat.reshape(2, 1, 1)
+            Z = (np.einsum('kij,kl,lij->ij', tmp, algo.Ht, tmp) <= algo.ucb_bonus) & (
+                    np.linalg.norm(np.array([X, Y]), axis=0) <= S)
+        elif algo.name == "OFUGLB":
+            f = lambda x, y: algo.neg_log_likelihood_plotting(np.array([x, y])) - algo.log_loss_hat
+            Z = (f(X, Y) <= algo.ucb_bonus) & (np.linalg.norm(np.array([X, Y]), axis=0) <= S)
+        elif algo.name == "OFULogPlus":
+            f = lambda x, y: algo.neg_log_likelihood_plotting(np.array([x, y])) - algo.log_loss_hat
+            Z = (f(X, Y) <= algo.ucb_bonus) & (np.linalg.norm(np.array([X, Y]), axis=0) <= S)
+        elif algo.name == "OFULog-r":
+            f = lambda x, y: algo.logistic_loss_seq(np.array([x, y])) - algo.log_loss_hat
+            Z = (f(X, Y) <= algo.ucb_bonus) & (np.linalg.norm(np.array([X, Y]), axis=0) <= S)
+        else:
+            raise NotImplementedError(f"Plotting not implemented for {algo.name}")
+        Z = Z.astype(int)
+        save_npz(X, Y, Z, algo.theta_hat, S, config["arm_set_type"], algo.name)
+    
     return (regret_array, 1 / np.mean(kappa_inv_array, axis=0))
 
 
@@ -42,8 +71,21 @@ def many_bandit_exps(config):
         cum_regret = np.cumsum(regret, axis=1)
         return np.mean(cum_regret, axis=0), np.std(cum_regret, axis=0), np.mean(kappa_invs, axis=0)
     else:
-        everything = one_bandit_exp(config)
+        everything = one_bandit_exp(config, True)
         regret = everything[0]
         kappa_inv = everything[1]
         cum_regret = np.cumsum(regret)
         return cum_regret, np.zeros(cum_regret.shape), kappa_inv
+
+
+
+def save_npz(X, Y, Z, theta_hat, S, ast, name):
+    """
+    Save the data for plotting the CS
+    """
+    path = f"S={S}/{ast}"
+    if not os.path.exists(path):
+        os.makedirs(path)
+    with open(f"{path}/{name}.npz", "wb") as file:
+        np.savez(file, theta_hat=theta_hat, x=X, y=Y, z=Z)
+    print(f"Saved data for {name}, S={S}, {ast}")

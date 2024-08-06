@@ -43,26 +43,21 @@ def VAW_regularizer_J(arm, theta):
 
 
 class EMK(LogisticBandit):
-    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, arm_set_type="tv_discrete", lazy_update_fr=1, plot_confidence=False,
-                 N_confidence=1000):
+    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, lazy_update_fr=1):
         """
         :param lazy_update_fr:  integer dictating the frequency at which to do the learning if we want the algo to be lazy (default: 1)
         """
         super().__init__(param_norm_ub, arm_norm_ub, dim, failure_level)
         self.name = 'EMK'
-        self.arm_set_type = arm_set_type
         self.lazy_update_fr = lazy_update_fr
         # initialize some learning attributes
         self.arms = []
         self.rewards = []
         self.theta_hat = np.random.normal(0, 1, (self.dim, 1))
         self.ctr = 1
-        self.log_loss_hat = 0
-        self.plot = plot_confidence
-        self.N = N_confidence
         self.T = horizon
 
-        self.weighted_log_hat = 0
+        self.weighted_log_loss_hat = 0
         self.theta_hats = []
         self.weights = []
         self.L = 1 / 4  # for Bernoulli, L = 1/4
@@ -106,7 +101,7 @@ class EMK(LogisticBandit):
         bias2 = 2 * self.l2reg * self.param_norm_ub ** 2 * arm.T @ self.V_inv @ arm
         self.weights.append(1 / (1 + self.L * bias2))
 
-        self.weighted_log_hat += self.weights[-1] * self.neg_log_likelihood(self.theta_hat, [arm], [reward])
+        self.weighted_log_loss_hat += self.weights[-1] * self.neg_log_likelihood(self.theta_hat, [arm], [reward])
 
         # update counter
         self.ctr += 1
@@ -124,7 +119,7 @@ class EMK(LogisticBandit):
             obj_J = lambda theta: -arm
             ineq_cons = {'type': 'ineq',
                          'fun': lambda theta: np.array([
-                             np.log(1 / self.failure_level) - (self.neg_log_likelihood_sequential(theta) - self.weighted_log_hat),
+                             np.log(1 / self.failure_level) - (self.neg_log_likelihood_sequential(theta) - self.weighted_log_loss_hat),
                              self.param_norm_ub ** 2 - np.dot(theta, theta)]),
                          'jac': lambda theta: - np.vstack((self.neg_log_likelihood_sequential_J(theta).T, 2 * theta))}
             opt = minimize(obj, x0=self.theta_hat, method='SLSQP', jac=obj_J, constraints=ineq_cons)
@@ -149,17 +144,6 @@ class EMK(LogisticBandit):
             #         problem.solve(tol_gap_rel=1e-4, verbose=True)
             #         # raise ValueError
             # res = problem.value
-
-            ## plot confidence set
-            if self.plot and len(self.rewards) == self.T - 2:
-                ## store data
-                interact_rng = np.linspace(-self.param_norm_ub - 0.5, self.param_norm_ub + 0.5, self.N)
-                X, Y = np.meshgrid(interact_rng, interact_rng)
-                f = lambda x, y: self.neg_log_likelihood_sequential_plotting(np.array([x, y])) - self.weighted_log_hat
-                Z = ((f(X, Y) <= np.log(1 / self.failure_level))
-                     & (np.linalg.norm(np.array([X, Y]), axis=0) <= self.param_norm_ub))
-                Z = Z.astype(int)
-                self.save_npz(X, Y, Z, self.theta_hat)
         return res
     
 

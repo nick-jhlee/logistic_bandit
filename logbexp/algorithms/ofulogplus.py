@@ -98,14 +98,4 @@ class OFULogPlus(LogisticBandit):
                          'jac': lambda theta: - np.vstack((self.neg_log_likelihood_full_J(theta).T, 2 * theta))}
             opt = minimize(obj, x0=self.theta_hat, method='SLSQP', jac=obj_J, constraints=ineq_cons)
             res = np.sum(arm * opt.x)
-
-            ## plot confidence set
-            if self.plot and len(self.rewards) == self.T - 2:
-                ## store data
-                interact_rng = np.linspace(-self.param_norm_ub - 0.5, self.param_norm_ub + 0.5, self.N)
-                X, Y = np.meshgrid(interact_rng, interact_rng)
-                f = lambda x, y: self.neg_log_likelihood_plotting(np.array([x, y])) - self.log_loss_hat
-                Z = (f(X, Y) <= self.ucb_bonus) & (np.linalg.norm(np.array([X, Y]), axis=0) <= self.param_norm_ub)
-                Z = Z.astype(int)
-                self.save_npz(X, Y, Z, self.theta_hat)
         return res

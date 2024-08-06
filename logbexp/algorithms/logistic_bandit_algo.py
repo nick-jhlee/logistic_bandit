@@ -1,5 +1,4 @@
 from logbexp.utils.utils import *
-import os
 
 
 class LogisticBandit(object):
@@ -102,13 +101,3 @@ class LogisticBandit(object):
             tmp1 = np.einsum('t,tij->ij', np.array(self.rewards), np.log(sigmoid(tmp)))
             tmp2 = np.einsum('t,tij->ij', (1 - np.array(self.rewards)), np.log(sigmoid(-tmp)))
             return - tmp1 - tmp2
-
-    def save_npz(self, X, Y, Z, theta_hat):
-        """
-        Save the data for plotting the CS
-        """
-        path = f"S={self.param_norm_ub}/{self.arm_set_type}"
-        if not os.path.exists(path):
-            os.makedirs(path)
-        with open(f"{path}/{self.name}.npz", "wb") as file:
-            np.savez(file, theta_hat=theta_hat, x=X, y=Y, z=Z)

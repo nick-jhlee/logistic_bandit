@@ -36,6 +36,7 @@ class LogisticBandit(object):
         self.dim = dim
         self.failure_level = failure_level
         self.name = None
+        self.arm_set_type = None
         self.arms = []
         self.rewards = []
 

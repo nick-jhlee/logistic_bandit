@@ -30,13 +30,12 @@ def logistic(z):
 
 
 class OFULogr(LogisticBandit):
-    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, arm_set_type="tv_discrete", lazy_update_fr=1, plot_confidence=False, N_confidence=500):
+    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, lazy_update_fr=1):
         """
         :param lazy_update_fr:  integer dictating the frequency at which to do the learning if we want the algo to be lazy (default: 1)
         """
         super().__init__(param_norm_ub, arm_norm_ub, dim, failure_level)
         self.name = 'OFULog-r'
-        self.arm_set_type = arm_set_type
         self.lazy_update_fr = lazy_update_fr
         # initialize some learning attributes
         self.l2reg = self.dim
@@ -48,8 +47,6 @@ class OFULogr(LogisticBandit):
         # containers
         self.arms = []
         self.rewards = []
-        self.plot = plot_confidence
-        self.N = N_confidence
         self.T = horizon
 
     def reset(self):
@@ -116,16 +113,6 @@ class OFULogr(LogisticBandit):
                          'jac': lambda theta: - self.neg_regularized_log_likelihood_full_J(theta).T}
             opt = minimize(obj, x0=self.theta_hat, method='SLSQP', jac=obj_J, constraints=ineq_cons)
             res = np.sum(arm * opt.x)
-
-            ## plot confidence set
-            if self.plot and len(self.rewards) == self.T - 2:
-                ## store data
-                interact_rng = np.linspace(-self.param_norm_ub-0.5, self.param_norm_ub+0.5, self.N)
-                X, Y = np.meshgrid(interact_rng, interact_rng)
-                f = lambda x, y: self.logistic_loss_seq(np.array([x, y])) - self.log_loss_hat
-                Z = (f(X, Y) <= self.ucb_bonus) & (np.linalg.norm(np.array([X, Y]), axis=0) <= self.param_norm_ub)
-                Z = Z.astype(int)
-                self.save_npz(X, Y, Z, self.theta_hat)
         return res
 
     def neg_regularized_log_likelihood_full(self, theta):
