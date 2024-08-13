@@ -50,6 +50,8 @@ for d in dims:
         for algo in algos:
             theta_star = pn / np.sqrt(d) * np.ones([d])
             pn_ub = pn + 1 # parameter upper-bound (S = ||theta_star|| + 1)
+            # pn_ub = 2 * pn # parameter upper-bound (S = 2*||theta_star||)
+            # pn_ub = 4 * pn # parameter upper-bound (S = 4*||theta_star||)
             config_path = os.path.join(config_dir, 'h{}d{}a{}n{}t{}.json'.format(horizon, d, algo, pn, arm_set_type))
             config_dict = {"repeat": int(repeat), "horizon": int(np.ceil(np.sqrt(d))*horizon), "dim": int(d),
                            "algo_name": algo, "theta_star": theta_star.tolist(), "param_norm_ub": int(pn_ub),

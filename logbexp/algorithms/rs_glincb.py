@@ -153,4 +153,4 @@ class RS_GLinCB(LogisticBandit):
             self.H += (dmu(np.dot(arm, self.theta_hat_o)) / math.e) * np.outer(arm, arm)
             # Sherman-Morrison formula
             tmp = np.sqrt(dmu(np.dot(arm, self.theta_hat_o)) / math.e) * arm
-            self.H_inv -= np.outer(self.V_inv @ tmp, self.V_inv @ tmp) / (1 + tmp.T @ self.V_inv @ tmp)
+            self.H_inv -= np.outer(self.H_inv @ tmp, self.H_inv @ tmp) / (1 + tmp.T @ self.H_inv @ tmp)

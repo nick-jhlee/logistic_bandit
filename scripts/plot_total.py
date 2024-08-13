@@ -29,9 +29,10 @@ from logbexp.utils.utils import dsigmoid
 parser = argparse.ArgumentParser(description='Plot regret curves, by default for dimension=2 and parameter norm=1',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-d', type=int, nargs='?', default=2, help='Dimension')
-parser.add_argument('-hz', type=int, nargs='?', default=4002, help='Horizon length)')
+parser.add_argument('-hz', type=int, nargs='?', default=4002, help='Horizon length')
 parser.add_argument('-ast', type=str, nargs='?', default='tv_discrete',
                     help='Arm set type. Must be either fixed_discrete, tv_discrete or ball')
+parser.add_argument('-S', type=int, nargs='+', help='known norm upper bound of the unknown parameter')
 parser.add_argument('-Nconfidence', type=int, nargs='?', default=2000,
                     help='Number of discretizations (per axis) for confidence set plot')
 
@@ -41,6 +42,7 @@ d = args.d
 H = args.hz
 arm_set_type = args.ast
 N = args.Nconfidence
+S_list = args.S
 print(r"Plotting regret curves and confidence sets for $d=${}, $H=${} and arm_set_type={}".format(d, H, arm_set_type))
 
 alg_dict = {"OFUGLB": "OFUGLB", "OFUGLB-e": "OFUGLB-e", "EMK": "EMK", "RS-GLinCB": "RS-GLinCB", "OFULogPlus": "OFULog+",
@@ -58,7 +60,7 @@ plt.rcParams.update({
     "font.size": 24})
 tick_font_size = 24
 
-cols = [r"$S=4$", r"$S=6$", r"$S=8$", r"$S=10$"]
+cols = [rf"$S={S}$" for S in S_list]
 rows = ['Regret plots', 'Magnified regret plots', 'Confidence sets']
 
 for ax, col in zip(axes[0], cols):
@@ -68,9 +70,9 @@ for ax, row in zip(axes[:, 0], rows):
     ax.set_ylabel(row, size='large')
 
 lines, labels = [], []
-for row in range(3):
+for row in range(2):
     # plot regrets first
-    for plt_idx, S in enumerate([4, 6, 8, 10]):
+    for plt_idx, S in enumerate(S_list):
         if row != 2:
             # path to logs/
             # logs_dir = f'logs/{arm_set_type}_h_{H}'
@@ -96,8 +98,8 @@ for row in range(3):
                     # eliminate logs with undesired arm set type
                     if not str(log_dict["arm_set_type"]) == arm_set_type:
                         continue
-                    # eliminate logs with undesired param norm
-                    if not int(log_dict["norm_theta_star"]) == S - 1:
+                    # eliminate logs with undesired S
+                    if not int(log_dict["param_norm_ub"]) == S:
                         continue
 
                     # print(algo)
@@ -111,7 +113,8 @@ for row in range(3):
             # plotting
             with sns.axes_style("whitegrid"):
                 tmp = None
-                for algorithm in ["OFUGLB", "OFUGLB-e", "EMK", "RS-GLinCB", "OFULogPlus", "adaECOLog"]:
+                for algorithm in ["OFUGLB", "EMK"]:
+                # for algorithm in ["OFUGLB", "OFUGLB-e", "EMK", "RS-GLinCB", "OFULogPlus", "adaECOLog"]:
                     alg_name = alg_dict[algorithm]
                     regret = res_dict_mean[algorithm]
                     std = res_dict_std[algorithm]

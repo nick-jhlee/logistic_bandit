@@ -28,13 +28,14 @@ parser.add_argument('-Nconfidence', type=int, nargs='?', default=1000, help='Num
 args = parser.parse_args()
 
 param_norm = args.pn
-S = int(param_norm + 1)
+# S = int(param_norm + 1)
+S = 2 * int(param_norm)
 arm_set_type = args.ast
 N = args.Nconfidence
 
 
 # basic quantities
-theta_star = np.array([(S - 1) / np.sqrt(2), (S - 1) / np.sqrt(2)])
+theta_star = np.array([param_norm / np.sqrt(2), param_norm / np.sqrt(2)])
 interact_rng = np.linspace(-S - 0.5, S + 0.5, N)
 x, y = np.meshgrid(interact_rng, interact_rng)
 

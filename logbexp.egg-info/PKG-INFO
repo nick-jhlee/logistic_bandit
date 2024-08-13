@@ -100,24 +100,6 @@ optional arguments:
   -pn [PN]    Parameter norm (default: 9.0)
 ```
 
-You can use `scripts/plot_regret_total.py` to plot regret curves for all considered S's.
-
-```
-usage: plot_regret_total.py [-h] [-d [D]] [-hz [HZ]] [-ast [AST]]
-
-Plot regret curves
-
-optional arguments:
-  -h, --help  show this help message and exit
-  -d [D]      Dimension (default: 2)
-  -hz [HZ]    Horizon length (default: 4000)
-  -ast [AST]  Dimension (default: tv_discrete)
-```
-
-Example output:
-
-<img src="./regret_fig.png" width="600" alt="">
-
 
 ### Confidence sets
 You can use `scripts/plot_confidence.py` to plot confidence sets. This scripts plot confidence sets for all logs in `scripts/S=*`.
@@ -131,12 +113,28 @@ optional arguments:
   -h, --help          show this help message and exit
   -ast [AST]          Dimension (default: tv_discrete)
   -pn [PN]            Parameter norm (default: 9.0)
-  -Nconfidence [N]    Number of discretizations (per axis) for confidence set plot (default: 5000)
+  -Nconfidence [N]    Number of discretizations (per axis) for confidence set plot (default: 2000)
 ```
 
-Example output (S=10):
+### Plotting everything together
+You can use `scripts/plot_total.py` to plot everything (Figure 1 of [Lee et al. 2024b](https://arxiv.org/abs/2407.13977))
 
-<img src="./confidence_fig.png" width="500" alt="">
+```
+usage: plot_total.py [-h] [-d [D]] [-hz [HZ]] [-ast [AST]] [-Nconfidence [N]]
+
+Plot regret curves
+
+optional arguments:
+  -h, --help  show this help message and exit
+  -d [D]      Dimension (default: 2)
+  -hz [HZ]    Horizon length (default: 4000)
+  -ast [AST]  Dimension (default: tv_discrete)
+  -Nconfidence [N]    Number of discretizations (per axis) for confidence set plot (default: 2000)
+```
+
+Example output:
+
+<img src="./main_fig.png" width="1000" alt="">
 
 
 ## Generating configs 
