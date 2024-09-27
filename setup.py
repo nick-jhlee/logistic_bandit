@@ -15,7 +15,7 @@ setup(
     license='Apache License 2.0',
     author='Junghyun Lee and Louis Faury',
     author_email='jh_lee00@kaist.ac.kr, l.faury@hotmail.fr',
-    description='Bandit Experiments',
+    description='Logistic .Bandit Experiments',
     long_description=long_description,
     long_description_content_type="text/markdown",
 )

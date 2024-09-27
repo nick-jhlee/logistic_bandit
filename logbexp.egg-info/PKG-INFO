@@ -1,7 +1,7 @@
 Metadata-Version: 2.1
 Name: logbexp
 Version: 1.0
-Summary: Bandit Experiments
+Summary: Logistic .Bandit Experiments
 Home-page: https://github.com/nick-jhlee/logistic_bandit
 Author: Junghyun Lee and Louis Faury
 Author-email: jh_lee00@kaist.ac.kr, l.faury@hotmail.fr
@@ -10,7 +10,7 @@ Requires-Python: >=3.8
 Description-Content-Type: text/markdown
 
 Codes for the following two papers by [Junghyun Lee](https://nick-jhlee.github.io/), [Se-Young Yun](https://fbsqkd.github.io/), and [Kwang-Sung Jun](https://kwangsungjun.github.io):
-- [_A Unified Confidence Sequence for Generalized Linear Models, with Applications to Bandits_](https://arxiv.org/abs/2407.13977) (arXiv 2024),
+- [_A Unified Confidence Sequence for Generalized Linear Models, with Applications to Bandits_](https://arxiv.org/abs/2407.13977) (NeurIPS 2024),
 - [_Improved Regret Bounds of (Multinomial) Logistic Bandits via Regret-to-Confidence-Set Conversion_](https://arxiv.org/abs/2310.18554) (AISTATS 2024).
 
 This is forked from https://github.com/criteo-research/logistic_bandit.
@@ -18,12 +18,14 @@ This is forked from https://github.com/criteo-research/logistic_bandit.
 If you plan to use this repository or cite our paper, please use the following bibtex format:
 
 ```latex
-@article{lee2024glm,
+@inproceedings{lee2024glm,
 	title={{A Unified Confidence Sequence for Generalized Linear Models, with Applications to Bandits}},
 	author={Lee, Junghyun and Yun, Se-Young and Jun, Kwang-Sung},
-	journal={arXiv preprint arXiv:2407.13977},
-	url={https://arxiv.org/abs/2407.13977},
-	year={2024}
+	booktitle = {Advances in Neural Information Processing Systems},
+	publisher = {Curran Associates, Inc.},
+	volume = {37},
+	year = {2024},
+	url = {https://arxiv.org/abs/2407.13977},
 }
 
 @InProceedings{lee2024logistic,

@@ -7,11 +7,11 @@ from logbexp.algorithms.ofulogr import OFULogr
 from logbexp.algorithms.ofulogplus import OFULogPlus
 from logbexp.algorithms.ofuglb import OFUGLB
 from logbexp.algorithms.ofuglb_e import OFUGLBe
-from logbexp.algorithms.ofuglb_ball_e import OFUGLBballe
+# from logbexp.algorithms.ofuglb_ball_e import OFUGLBballe
 from logbexp.algorithms.rs_glincb import RS_GLinCB
 from logbexp.algorithms.emk import EMK
 
-ALGOS = ['EMK', 'RS-GLinCB', 'OFUGLB-e', 'OFUGLB-ball-e', 'OFUGLB', 'OFULogPlus', 'adaECOLog', 'OFULog-r', 'LogUCB1', 'OL2M', 'GLOC', 'GLM-UCB']
+ALGOS = ['EMK', 'RS-GLinCB', 'OFUGLB-e', 'OFUGLB', 'OFULogPlus', 'adaECOLog', 'OFULog-r', 'LogUCB1', 'OL2M', 'GLOC', 'GLM-UCB']
 
 
 def create_algo(config):
@@ -63,12 +63,12 @@ def create_algo(config):
                       dim=config["dim"],
                       failure_level=config["failure_level"],
                       horizon=config["horizon"])
-    elif config["algo_name"] == 'OFUGLB-ball-e':
-        algo = OFUGLBballe(param_norm_ub=config["param_norm_ub"],
-                       arm_norm_ub=config["arm_norm_ub"],
-                       dim=config["dim"],
-                       failure_level=config["failure_level"],
-                       horizon=config["horizon"])    
+    # elif config["algo_name"] == 'OFUGLB-ball-e':
+    #     algo = OFUGLBballe(param_norm_ub=config["param_norm_ub"],
+    #                    arm_norm_ub=config["arm_norm_ub"],
+    #                    dim=config["dim"],
+    #                    failure_level=config["failure_level"],
+    #                    horizon=config["horizon"])
     elif config["algo_name"] == 'OFUGLB-e':
         algo = OFUGLBe(param_norm_ub=config["param_norm_ub"],
                        arm_norm_ub=config["arm_norm_ub"],

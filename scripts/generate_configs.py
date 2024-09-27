@@ -36,10 +36,11 @@ plot_confidence = (args.plotconfidence in ["True", "true"])
 N_confidence = args.Nconfidence
 
 # create right config directory
-here = os.path.dirname(os.path.abspath(__file__))
-config_dir = os.path.join(here, 'configs', 'generated_configs')
+# here = os.path.dirname(os.path.abspath(__file__))
+# config_dir = os.path.join(here, 'configs', 'generated_configs')
+config_dir = 'configs/generated_configs'
 if not os.path.exists(config_dir):
-    os.mkdir(config_dir)
+    os.makedirs(config_dir)
 # clear existing configs
 for file in os.listdir(config_dir):
     os.remove(os.path.join(config_dir, file))
