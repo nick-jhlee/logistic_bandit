@@ -63,6 +63,7 @@ Only applicable for bounded GLBs:
 Generally applicable for any GLBs:
 - `GLOC` ([Jun et al. 2017](https://proceedings.neurips.cc/paper/2017/file/28dd2c7955ce926456240b2ff0100bde-Paper.pdf)),
 - `EMK` ([Emmenegger et al. 2023](hhttps://openreview.net/forum?id=4anryczeED))
+- `EVILL` ([Janz et al. 2024](https://proceedings.mlr.press/v238/janz24a.html)) -- randomized exploration
 - `OFUGLB` & `OFUGLB-e` ([Lee et al. 2024b](https://arxiv.org/abs/2407.13977))
 
 
@@ -146,7 +147,7 @@ optional arguments:
   -pn PN [PN ...]       Parameter norm (||theta_star||) (default: None)
   -algos ALGOS [ALGOS ...]
                         List of algorithms. (default: None)
-                        ('EMK', 'RS-GLinCB', 'OFUGLB-e', 'OFUGLB', 'OFULogPlus', 'adaECOLog', 'OFULog-r', 'LogUCB1', 'OL2M', 'GLOC', 'GLM-UCB')
+                        ('EVILL', 'EMK', 'RS-GLinCB', 'OFUGLB-e', 'OFUGLB', 'OFULogPlus', 'adaECOLog', 'OFULog-r', 'LogUCB1', 'OL2M', 'GLOC', 'GLM-UCB')
   -r [R]                # of independent runs (default: 10)
   -hz [HZ]              Horizon, normalized (later multiplied by sqrt(dim)) (default: 2000)
   -ast [AST]            Arm set type. Must be either fixed_discrete, tv_discrete or ball (default: tv_discrete)

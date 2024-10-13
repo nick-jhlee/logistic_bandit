@@ -10,6 +10,7 @@ logbexp/algorithms/__init__.py
 logbexp/algorithms/algo_factory.py
 logbexp/algorithms/ecolog.py
 logbexp/algorithms/emk.py
+logbexp/algorithms/evill.py
 logbexp/algorithms/glm_ucb.py
 logbexp/algorithms/gloc.py
 logbexp/algorithms/logistic_bandit_algo.py

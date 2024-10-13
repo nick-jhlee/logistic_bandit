@@ -7,6 +7,7 @@ from logbexp.algorithms.ofulogr import OFULogr
 from logbexp.algorithms.ofulogplus import OFULogPlus
 from logbexp.algorithms.ofuglb import OFUGLB
 from logbexp.algorithms.ofuglb_e import OFUGLBe
+from logbexp.algorithms.evill import EVILL
 # from logbexp.algorithms.ofuglb_ball_e import OFUGLBballe
 from logbexp.algorithms.rs_glincb import RS_GLinCB
 from logbexp.algorithms.emk import EMK
@@ -83,6 +84,12 @@ def create_algo(config):
                        horizon=config["horizon"])
     elif config["algo_name"] == 'EMK':
         algo = EMK(param_norm_ub=config["param_norm_ub"],
+                         arm_norm_ub=config["arm_norm_ub"],
+                         dim=config["dim"],
+                         failure_level=config["failure_level"],
+                         horizon=config["horizon"])
+    elif config["algo_name"] == 'EVILL':
+        algo = EVILL(param_norm_ub=config["param_norm_ub"],
                          arm_norm_ub=config["arm_norm_ub"],
                          dim=config["dim"],
                          failure_level=config["failure_level"],

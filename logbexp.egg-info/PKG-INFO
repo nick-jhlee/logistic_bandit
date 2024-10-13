@@ -55,23 +55,27 @@ Every time one changes the source code, one should run `pip install .` again to 
 
 This code implements the following bandit algorithms (oldest to newest):
 
-- `GLM-UCB` from [Filippi et al. 2010](https://papers.nips.cc/paper/2010/file/c2626d850c80ea07e7511bbae4c76f4b-Paper.pdf),
-- `OFUL` (\*) from [Abbasi-Yadkori et al. 2011](https://papers.nips.cc/paper/2011/file/7f1c3f338b8e2e9d6b5e8e4e7f3b4208-Paper.pdf)
-- `OL2M` from [Zhang et al. 2016](http://proceedings.mlr.press/v48/zhangb16.pdf),
-- `GLOC` from [Jun et al. 2017](https://proceedings.neurips.cc/paper/2017/file/28dd2c7955ce926456240b2ff0100bde-Paper.pdf),
-- `LogUCB1` (\**) from [Faury et al. 2020](http://proceedings.mlr.press/v119/faury20a/faury20a.pdf),
-- `OFULog-r` (\**) from [Abeille et al. 2021](http://proceedings.mlr.press/v130/abeille21a/abeille21a.pdf).
-- `ada-OFU-ECOLog` (\**) from [Faury et al. 2022](https://proceedings.mlr.press/v151/faury22a.html)
-- `ada-OFU-ECOLog-TS` (\**) from [Faury et al. 2022](https://proceedings.mlr.press/v151/faury22a.html)
-- `OFULog+` (\**) [Lee et al. 2024a](https://arxiv.org/abs/2310.18554)
-- `EMK` from [Emmenegger et al. 2023](hhttps://openreview.net/forum?id=4anryczeED)
-- `CMM-UCB` (\*) from [Flynn et al. 2023](https://openreview.net/forum?id=TXoZiUZywf&noteId=hiOPt0S3AO)
-- `RS-GLinCB` (\***) from [Sawarni et al. 2024](https://arxiv.org/abs/2404.06831)
-- `OFUGLB` & `OFUGLB-e` of [Lee et al. 2024b](https://arxiv.org/abs/2407.13977)
+Only applicable for linear bandits:
+- `OFUL` ([Abbasi-Yadkori et al. 2011](https://papers.nips.cc/paper/2011/file/7f1c3f338b8e2e9d6b5e8e4e7f3b4208-Paper.pdf))
+- `CMM-UCB` ([Flynn et al. 2023](https://openreview.net/forum?id=TXoZiUZywf&noteId=hiOPt0S3AO)) : not yet implemented..
 
-(\*) only applicable to linear bandits
-(\**) only applicable to logistic bandits
-(\***) only applicable to bounded GLBs
+Only applicable for logistic bandits:
+- `OL2M` ([Zhang et al. 2016](http://proceedings.mlr.press/v48/zhangb16.pdf))
+- `LogUCB1` ([Faury et al. 2020](http://proceedings.mlr.press/v119/faury20a/faury20a.pdf))
+- `OFULog-r` ([Abeille et al. 2021](http://proceedings.mlr.press/v130/abeille21a/abeille21a.pdf))
+- `ada-OFU-ECOLog` ([Faury et al. 2022](https://proceedings.mlr.press/v151/faury22a.html))
+- `ada-OFU-ECOLog-TS` ([Faury et al. 2022](https://proceedings.mlr.press/v151/faury22a.html))
+- `OFULog+` ([Lee et al. 2024a](https://arxiv.org/abs/2310.18554))
+
+Only applicable for bounded GLBs:
+- `GLM-UCB` ([Filippi et al. 2010](https://papers.nips.cc/paper/2010/file/c2626d850c80ea07e7511bbae4c76f4b-Paper.pdf)),
+- `RS-GLinCB` ([Sawarni et al. 2024](https://arxiv.org/abs/2404.06831))
+
+Generally applicable for any GLBs:
+- `GLOC` ([Jun et al. 2017](https://proceedings.neurips.cc/paper/2017/file/28dd2c7955ce926456240b2ff0100bde-Paper.pdf)),
+- `EMK` ([Emmenegger et al. 2023](hhttps://openreview.net/forum?id=4anryczeED))
+- `EVILL` ([Janz et al. 2024](https://proceedings.mlr.press/v238/janz24a.html)) -- randomized exploration
+- `OFUGLB` & `OFUGLB-e` ([Lee et al. 2024b](https://arxiv.org/abs/2407.13977))
 
 
 Experiments can be run for several Logistic Bandit (i.e., structured Bernoulli feedback) environments, such as static and time-varying finite arm-sets, or inifinite arm-sets (_e.g._ unit ball).
@@ -154,7 +158,7 @@ optional arguments:
   -pn PN [PN ...]       Parameter norm (||theta_star||) (default: None)
   -algos ALGOS [ALGOS ...]
                         List of algorithms. (default: None)
-                        ('EMK', 'RS-GLinCB', 'OFUGLB-e', 'OFUGLB', 'OFULogPlus', 'adaECOLog', 'OFULog-r', 'LogUCB1', 'OL2M', 'GLOC', 'GLM-UCB')
+                        ('EVILL', 'EMK', 'RS-GLinCB', 'OFUGLB-e', 'OFUGLB', 'OFULogPlus', 'adaECOLog', 'OFULog-r', 'LogUCB1', 'OL2M', 'GLOC', 'GLM-UCB')
   -r [R]                # of independent runs (default: 10)
   -hz [HZ]              Horizon, normalized (later multiplied by sqrt(dim)) (default: 2000)
   -ast [AST]            Arm set type. Must be either fixed_discrete, tv_discrete or ball (default: tv_discrete)
@@ -164,7 +168,7 @@ optional arguments:
   -Nconfidence [N]      Number of discretizations (per axis) for confidence set plot
 ```
 
-For instance running `python generate_configs.py -dims 2 -pn 3 4 5 -algos GLM-UCB GLOC OL2M adaECOLog` generates configs in dimension 2 for `GLM-UCB`, `GLOC`, `OL2M` and `adaECOLog`, for environments (set as defaults) of ground-truth norm 3, 4 and 5.
+For instance running `python generate_configs.py -dims 2 -pn 3 4 5 -algos OFUGLB adaECOLog` generates configs in dimension 2 for `OFUGLB` and `adaECOLog`, for environments (set as defaults) of ground-truth norm 3, 4 and 5.
 
 
 

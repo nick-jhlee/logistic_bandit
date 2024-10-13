@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser(description='Automatically creates configs, sto
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-dims', nargs='+', type=int, help='Dimension')
 parser.add_argument('-pn', nargs='+', type=float, help='Parameter norm (||theta_star||)')
-parser.add_argument('-algos', type=str, nargs='+', help='Algorithms. Must be a subset of OFULog-r, OL2M, GLOC, adaECOLog, OFULogPlus, OFUGLB, OFUGLB-e, RS-GLinCB')
+parser.add_argument('-algos', type=str, nargs='+', help='Algorithms. Must be a subset of OFULog-r, OL2M, GLOC, adaECOLog, OFULogPlus, OFUGLB, OFUGLB-e, RS-GLinCB, EVILL')
 parser.add_argument('-r', type=int, nargs='?', default=10, help='# of independent runs')
 parser.add_argument('-hz', type=int, nargs='?', default=2000, help='Horizon, normalized (later multiplied by sqrt(dim))')
 parser.add_argument('-ast', type=str, nargs='?', default='tv_discrete', help='Arm set type. Must be either fixed_discrete, tv_discrete or ball')
@@ -49,6 +49,8 @@ for file in os.listdir(config_dir):
 for d in dims:
     for pn in param_norm:
         for algo in algos:
+            if 'fixed' not in arm_set_type and algo == 'EVILL':
+                continue
             theta_star = pn / np.sqrt(d) * np.ones([d])
             pn_ub = pn + 1 # parameter upper-bound (S = ||theta_star|| + 1)
             # pn_ub = 2 * pn # parameter upper-bound (S = 2*||theta_star||)

@@ -46,10 +46,10 @@ S_list = args.S
 print(r"Plotting regret curves and confidence sets for $d=${}, $H=${} and arm_set_type={}".format(d, H, arm_set_type))
 
 alg_dict = {"OFUGLB": "OFUGLB", "OFUGLB-e": "OFUGLB-e", "EMK": "EMK", "RS-GLinCB": "RS-GLinCB", "OFULogPlus": "OFULog+",
-            "adaECOLog": "ada-OFU-ECOLog"}
+            "adaECOLog": "ada-OFU-ECOLog", "EVILL": "EVILL"}
 color_dict = {"OFUGLB": "red", "OFUGLB-e": "orange", "EMK": "blue", "RS-GLinCB": "black", "OFULogPlus": "green",
-              "adaECOLog": "purple"}
-alpha_dict = {"OFUGLB": 1, "OFUGLB-e": 1, "EMK": 0.4, "RS-GLinCB": 0.4, "OFULogPlus": 0.4, "adaECOLog": 0.4}
+              "adaECOLog": "purple", "EVILL": "brown"}
+alpha_dict = {"OFUGLB": 1, "OFUGLB-e": 1, "EMK": 0.4, "RS-GLinCB": 0.4, "OFULogPlus": 0.4, "adaECOLog": 0.4, "EVILL": 0.4}
 clrs = sns.color_palette("husl", 4)
 
 fig, axes = plt.subplots(3, 4, figsize=(30, 20))
@@ -70,7 +70,7 @@ for ax, row in zip(axes[:, 0], rows):
     ax.set_ylabel(row, size='large')
 
 lines, labels = [], []
-for row in range(2):
+for row in range(3):
     # plot regrets first
     for plt_idx, S in enumerate(S_list):
         if row != 2:
@@ -108,13 +108,13 @@ for row in range(2):
                     res_dict_std[algo] = np.array(log_dict["std_cum_regret"])
 
             if len(res_dict_mean) == 0 or len(res_dict_std) == 0:
-                raise ValueError("No logs found for the given parameters.")
+                raise ValueError("No logs found for the given parameters: d={}, H={}, S={}, and arm_set_type={}".format(d, H, S, arm_set_type))
 
             # plotting
             with sns.axes_style("whitegrid"):
                 tmp = None
-                for algorithm in ["OFUGLB", "EMK"]:
-                # for algorithm in ["OFUGLB", "OFUGLB-e", "EMK", "RS-GLinCB", "OFULogPlus", "adaECOLog"]:
+                # for algorithm in ["OFUGLB", "EMK"]:
+                for algorithm in ["OFUGLB", "OFUGLB-e", "EMK", "RS-GLinCB", "OFULogPlus", "adaECOLog", "EVILL"]:
                     alg_name = alg_dict[algorithm]
                     regret = res_dict_mean[algorithm]
                     std = res_dict_std[algorithm]
