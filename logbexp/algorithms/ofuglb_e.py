@@ -2,7 +2,7 @@
 Created on 2024.08.03
 @author: nicklee
 
-Class for the OFUGLB-e (ellipsoidal OFUGLB) of [Lee et al., arXiv'24]. Inherits from the LogisticBandit class.
+Class for the OFUGLB-e (ellipsoidal OFUGLB) of [Lee et al., NeurIPS'24]. Inherits from the LogisticBandit class.
 Use closed-form bonus! (Theorem 3.2)
 
 Additional Attributes

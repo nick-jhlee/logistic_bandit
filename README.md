@@ -144,7 +144,7 @@ optional arguments:
   -h, --help            show this help message and exit
   -dims DIMS [DIMS ...]
                         Dimension (default: None)
-  -pn PN [PN ...]       Parameter norm (||theta_star||) (default: None)
+  -pn PN [PN ...]       Parameter norm (||theta_star|| = S - 1) (default: None)
   -algos ALGOS [ALGOS ...]
                         List of algorithms. (default: None)
                         ('EVILL', 'EMK', 'RS-GLinCB', 'OFUGLB-e', 'OFUGLB', 'OFULogPlus', 'adaECOLog', 'OFULog-r', 'LogUCB1', 'OL2M', 'GLOC', 'GLM-UCB')

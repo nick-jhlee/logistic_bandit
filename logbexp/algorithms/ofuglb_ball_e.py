@@ -2,7 +2,7 @@
 Created on 2024.08.03
 @author: nicklee
 
-Class for the OFUGLB-balll-e (OFUGLB with intersection of ball and ellipsoid) of [Lee et al., arXiv'24]. Inherits from the LogisticBandit class.
+Class for the OFUGLB-balll-e (OFUGLB with intersection of ball and ellipsoid) of [Lee et al., NeurIPS'24]. Inherits from the LogisticBandit class.
 
 Additional Attributes
 ---------------------

@@ -2,7 +2,7 @@
 Created on 2024.05.21
 @author: nicklee
 
-Class for the OFUGLB of [Lee et al., arXiv'24]. Inherits from the LogisticBandit class.
+Class for the OFUGLB of [Lee et al., NeurIPS'24]. Inherits from the LogisticBandit class.
 
 Additional Attributes
 ---------------------
