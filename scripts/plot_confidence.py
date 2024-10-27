@@ -28,15 +28,15 @@ parser.add_argument('-Nconfidence', type=int, nargs='?', default=1000, help='Num
 args = parser.parse_args()
 
 param_norm = args.pn
-# S = int(param_norm + 1)
-S = 2 * int(param_norm)
+S = int(param_norm + 1)
 arm_set_type = args.ast
 N = args.Nconfidence
 
 
 # basic quantities
 theta_star = np.array([param_norm / np.sqrt(2), param_norm / np.sqrt(2)])
-interact_rng = np.linspace(-S - 0.5, S + 0.5, N)
+# interact_rng = np.linspace(-S - 0.5, S + 0.5, N)
+interact_rng = np.linspace(-2*S, 2*S, N)
 x, y = np.meshgrid(interact_rng, interact_rng)
 
 # fnames = ["adaECOLog.npz","OFULogr.npz", "OFULogPlus.npz"]

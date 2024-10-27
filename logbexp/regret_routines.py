@@ -52,7 +52,7 @@ def one_bandit_exp(config, one_exp=False):
             Z = (f(X, Y) <= algo.ucb_bonus).astype(int)
         else:
             raise NotImplementedError(f"Plotting not implemented for {algo.name}")
-        if algo.name == "OFUGLB-e":
+        if algo.name != "OFUGLB-e":
             Z = Z_S * Z
         save_npz(X, Y, Z, algo.theta_hat, S, config["arm_set_type"], algo.name)
 
