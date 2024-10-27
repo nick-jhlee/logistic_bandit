@@ -31,14 +31,15 @@ class ArmSet(object):
         self.arm_norm_ub = arm_norm_ub
         self.arm_list = None
 
-    def generate_arm_list(self):
+    def generate_arm_list(self, seed=0):
         """
         Compute and stores the arm list.
         """
         if not self.type == AdmissibleArmSet.ball:
-            u = np.random.normal(0, 1, (self.length, self.dim))
+            rng = np.random.default_rng(seed)   # to keep the exp consistent across the repeats!
+            u = rng.normal(0, 1, (self.length, self.dim))
             norm = np.linalg.norm(u, axis=1)[:, None]
-            r = np.random.uniform(0, 1, (self.length,1)) ** (1.0 / self.dim)
+            r = rng.uniform(0, 1, (self.length,1)) ** (1.0 / self.dim)
             self.arm_list = r * u / norm
 
     def argmax(self, fun):

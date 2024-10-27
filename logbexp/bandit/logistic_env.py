@@ -18,6 +18,7 @@ class LogisticBanditEnv(object):
         self.oracle = LogisticOracle(theta_star)
         self.arm_set = ArmSet(arm_set_type, len(theta_star), arm_set_size, arm_norm_ub)
         self.arm_set.generate_arm_list()
+        self.count = 1
 
     def interact(self, arm):
         """
@@ -32,7 +33,8 @@ class LogisticBanditEnv(object):
 
         # regenerates arm-set if the arm-set is time-varying.
         if self.arm_set.type == AdmissibleArmSet.tvd:
-            self.arm_set.generate_arm_list()
+            self.arm_set.generate_arm_list(self.count)
+            self.count += 1
         return reward, regret, kappa_inv
 
     def get_best_arm(self):

@@ -34,26 +34,26 @@ def one_bandit_exp(config, one_exp=False):
         ## store data
         interact_rng = np.linspace(-S - 0.5, S + 0.5, N)
         X, Y = np.meshgrid(interact_rng, interact_rng)
+        Z_S = (np.linalg.norm(np.array([X, Y]), axis=0) <= S).astype(int)
         if algo.name == "EMK":
             f = lambda x, y: algo.neg_log_likelihood_sequential_plotting(np.array([x, y])) - algo.weighted_log_loss_hat
-            Z = ((f(X, Y) <= np.log(1 / algo.failure_level))
-                 & (np.linalg.norm(np.array([X, Y]), axis=0) <= S))
+            Z = (f(X, Y) <= np.log(1 / algo.failure_level)).astype(int)
         elif algo.name == "OFUGLB-e":
             tmp = np.array([X, Y]) - algo.theta_hat.reshape(2, 1, 1)
-            Z = (np.einsum('kij,kl,lij->ij', tmp, algo.Ht, tmp) <= algo.ucb_bonus) & (
-                    np.linalg.norm(np.array([X, Y]), axis=0) <= S)
+            Z = (np.einsum('kij,kl,lij->ij', tmp, algo.Ht, tmp) <= algo.ucb_bonus).astype(int)
         elif algo.name == "OFUGLB":
             f = lambda x, y: algo.neg_log_likelihood_plotting(np.array([x, y])) - algo.log_loss_hat
-            Z = (f(X, Y) <= algo.ucb_bonus) & (np.linalg.norm(np.array([X, Y]), axis=0) <= S)
+            Z = (f(X, Y) <= algo.ucb_bonus).astype(int)
         elif algo.name == "OFULogPlus":
             f = lambda x, y: algo.neg_log_likelihood_plotting(np.array([x, y])) - algo.log_loss_hat
-            Z = (f(X, Y) <= algo.ucb_bonus) & (np.linalg.norm(np.array([X, Y]), axis=0) <= S)
+            Z = (f(X, Y) <= algo.ucb_bonus).astype(int)
         elif algo.name == "OFULog-r":
             f = lambda x, y: algo.logistic_loss_seq(np.array([x, y])) - algo.log_loss_hat
-            Z = (f(X, Y) <= algo.ucb_bonus) & (np.linalg.norm(np.array([X, Y]), axis=0) <= S)
+            Z = (f(X, Y) <= algo.ucb_bonus).astype(int)
         else:
             raise NotImplementedError(f"Plotting not implemented for {algo.name}")
-        Z = Z.astype(int)
+        if algo.name == "OFUGLB-e":
+            Z = Z_S * Z
         save_npz(X, Y, Z, algo.theta_hat, S, config["arm_set_type"], algo.name)
 
     return regret_array, 1 / np.mean(kappa_inv_array, axis=0)
