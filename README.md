@@ -158,7 +158,7 @@ optional arguments:
   -ass [ASS]            Arm set size (default: 10)
   -fl [FL]              Failure level, must be in (0,1) (default: 0.05)
   -plotconfidence [N]   To plot the confidence set at the end or not (default: False)
-  -Nconfidence [N]      Number of discretizations (per axis) for confidence set plot
+  -Nconfidence [N]      Number of discretizations (per axis) for confidence set plot (default: 500)
   -tol [TOL]            Tolerance for optimization (default: 1e-5)
   -seed [SEED]          Random seed for experiments (default: 9817)
   -theta_flag [THETA_FLAG]  1 for theta being aligned with the largest eigenvector and 2 for the opposite (default: None)
