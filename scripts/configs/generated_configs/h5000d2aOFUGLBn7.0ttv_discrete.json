@@ -1,1 +1,0 @@
-{"repeat": 10, "horizon": 5000, "dim": 2, "algo_name": "OFUGLB", "theta_star": [4.949747468305833, 4.949747468305833], "param_norm_ub": 8, "failure_level": 0.05, "arm_set_type": "tv_discrete", "arm_set_size": 20, "arm_norm_ub": 1, "norm_theta_star": 7.0, "plot_confidence": false, "N_confidence": 500, "tol": 1e-05, "seed": 9817, "theta_flag": null, "arm_option": null}
