@@ -17,7 +17,7 @@ v_matrix_inv: np.array(dim x dim)
     inverse design matrix for Ol2m
 zt : np.array(dim)
     for computing theta_hat
-tetha_hat : np.array(dim)
+theta_hat : np.array(dim)
     center of confidence set
 theta: np.array(dim)
     ONS parameter
@@ -48,7 +48,7 @@ class Gloc(LogisticBandit):
         """
         self.v_matrix_inv = (1 / self.l2reg) * np.eye(self.dim)
         self.zt = np.zeros((self.dim,))
-        self.theta_hat = np.random.normal(0, 1, (self.dim,))
+        self.theta_hat = np.zeros((self.dim,))
         self.theta = np.random.normal(0, 1, (self.dim,))
         self.oco_regret_bound = 2 * self.kappa * self.param_norm_ub ** 2 * self.l2reg
         self.conf_radius = 0

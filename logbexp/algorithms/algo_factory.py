@@ -12,7 +12,8 @@ from logbexp.algorithms.evill import EVILL
 from logbexp.algorithms.rs_glincb import RS_GLinCB
 from logbexp.algorithms.emk import EMK
 
-ALGOS = ['EMK', 'RS-GLinCB', 'OFUGLB-e', 'OFUGLB', 'OFULogPlus', 'adaECOLog', 'OFULog-r', 'LogUCB1', 'OL2M', 'GLOC', 'GLM-UCB']
+ALGOS = ['OL2M', 'LogUCB1', 'OFULog-r', 'adaECOLog', 'OFULogPlus', 'GLM-UCB', 'RS-GLinCB',
+         'GLOC', 'EMK', 'EVILL', 'OFUGLB-e', 'OFUGLB']
 
 
 def create_algo(config):
@@ -24,7 +25,8 @@ def create_algo(config):
         algo = GlmUCB(param_norm_ub=config["param_norm_ub"],
                       arm_norm_ub=config["arm_norm_ub"],
                       dim=config["dim"],
-                      failure_level=config["failure_level"])
+                      failure_level=config["failure_level"],
+                      tol=config["tol"])
     elif config["algo_name"] == 'LogUCB1':
         algo = LogisticUCB1(param_norm_ub=config["param_norm_ub"],
                             arm_norm_ub=config["arm_norm_ub"],
@@ -35,7 +37,8 @@ def create_algo(config):
                        arm_norm_ub=config["arm_norm_ub"],
                        dim=config["dim"],
                        failure_level=config["failure_level"],
-                       horizon=config["horizon"])
+                      horizon=config["horizon"],
+                      tol=config["tol"])
     elif config["algo_name"] == 'OL2M':
         algo = Ol2m(param_norm_ub=config["param_norm_ub"],
                     arm_norm_ub=config["arm_norm_ub"],
@@ -57,13 +60,15 @@ def create_algo(config):
                           arm_norm_ub=config["arm_norm_ub"],
                           dim=config["dim"],
                           failure_level=config["failure_level"],
-                          horizon=config["horizon"])
+                      horizon=config["horizon"],
+                      tol=config["tol"])
     elif config["algo_name"] == 'OFUGLB':
         algo = OFUGLB(param_norm_ub=config["param_norm_ub"],
                       arm_norm_ub=config["arm_norm_ub"],
                       dim=config["dim"],
                       failure_level=config["failure_level"],
-                      horizon=config["horizon"])
+                      horizon=config["horizon"],
+                      tol=config["tol"])
     # elif config["algo_name"] == 'OFUGLB-ball-e':
     #     algo = OFUGLBballe(param_norm_ub=config["param_norm_ub"],
     #                    arm_norm_ub=config["arm_norm_ub"],
@@ -75,25 +80,43 @@ def create_algo(config):
                        arm_norm_ub=config["arm_norm_ub"],
                        dim=config["dim"],
                        failure_level=config["failure_level"],
-                       horizon=config["horizon"])
+                      horizon=config["horizon"],
+                      tol=config["tol"])
     elif config["algo_name"] == 'RS-GLinCB':
         algo = RS_GLinCB(param_norm_ub=config["param_norm_ub"],
                        arm_norm_ub=config["arm_norm_ub"],
                        dim=config["dim"],
                        failure_level=config["failure_level"],
-                       horizon=config["horizon"])
+                      horizon=config["horizon"],
+                      tol=config["tol"])
     elif config["algo_name"] == 'EMK':
         algo = EMK(param_norm_ub=config["param_norm_ub"],
                          arm_norm_ub=config["arm_norm_ub"],
                          dim=config["dim"],
                          failure_level=config["failure_level"],
-                         horizon=config["horizon"])
+                         horizon=config["horizon"],
+                         tol=config["tol"])
+    # elif config["algo_name"] == 'EMKKj':
+    #     algo = EMKKj(param_norm_ub=config["param_norm_ub"],
+    #                      arm_norm_ub=config["arm_norm_ub"],
+    #                      dim=config["dim"],
+    #                      failure_level=config["failure_level"],
+    #                      horizon=config["horizon"],
+    #                      tol=config["tol"])
+    # elif config["algo_name"] == 'EMKKj2':
+    #     algo = EMKKj2(param_norm_ub=config["param_norm_ub"],
+    #                      arm_norm_ub=config["arm_norm_ub"],
+    #                      dim=config["dim"],
+    #                      failure_level=config["failure_level"],
+    #                      horizon=config["horizon"],
+    #                      tol=config["tol"])
     elif config["algo_name"] == 'EVILL':
         algo = EVILL(param_norm_ub=config["param_norm_ub"],
                          arm_norm_ub=config["arm_norm_ub"],
                          dim=config["dim"],
                          failure_level=config["failure_level"],
-                         horizon=config["horizon"])
+                         horizon=config["horizon"],
+                         tol=config["tol"])
     if algo is None:
         raise ValueError("Oops. The algorithm {} is not implemented. You must choose within ({})".format(
             config["algo_name"], ''.join(['\'' + elem + '\'' + ', ' for elem in ALGOS])))

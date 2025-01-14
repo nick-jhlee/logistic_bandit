@@ -4,6 +4,7 @@ Running regret minimization for all configs in configs/generated_configs/
 
 import json
 import os
+import ipdb
 
 from logbexp.regret_routines import many_bandit_exps
 
@@ -17,21 +18,23 @@ def run(config_path):
     mean_cum_regret, std_cum_regret, kappa = many_bandit_exps(config)
     print("kappa = ", kappa)
     if config['repeat'] == 1 or config['plot_confidence']:
-        log_path = os.path.join(logs_dir_plot, 'h{}d{}a{}n{}t{}plot'.format(config["horizon"], config["dim"],
+        log_path = os.path.join(plot_dir, 'h{}d{}a{}n{}t{}'.format(config["horizon"], config["dim"],
                                                                    config["algo_name"],
                                                                    config['norm_theta_star'],
                                                                    config['arm_set_type']))
     else:
-        log_path = os.path.join(logs_dir, 'h{}d{}a{}n{}t{}'.format(config["horizon"], config["dim"],
-                                                                   config["algo_name"],
-                                                                   config['norm_theta_star'],
-                                                                   config['arm_set_type']))
+        log_path = os.path.join(regret_dir, 'h{}d{}a{}n{}t{}'.format(config["horizon"], config["dim"],
+                                                                config["algo_name"],
+                                                                config['norm_theta_star'],
+                                                                config['arm_set_type']))
 
     log_dict = config
     log_dict["mean_cum_regret"] = mean_cum_regret.tolist()
     log_dict["std_cum_regret"] = std_cum_regret.tolist()
     with open(log_path, 'w') as f:
         json.dump(log_dict, f)
+    
+    # ipdb.set_trace()
 
 
 if __name__ == '__main__':
@@ -40,8 +43,14 @@ if __name__ == '__main__':
     logs_dir = os.path.join(here, 'logs')
     if not os.path.exists(logs_dir):
         os.mkdir(logs_dir)
-    logs_dir_plot = os.path.join(here, 'logs_plot')
-    if not os.path.exists(logs_dir_plot):
-        os.mkdir(logs_dir_plot)
+    regret_dir = f"logs/regret"
+    if not os.path.exists(regret_dir):
+        os.makedirs(regret_dir)
+    plot_dir = f"logs/plot"
+    if not os.path.exists(plot_dir):
+        os.makedirs(plot_dir)
+    # logs_dir_plot = os.path.join(here, 'logs_plot')
+    # if not os.path.exists(logs_dir_plot):
+    #     os.mkdir(logs_dir_plot)
     for cf_path in os.listdir(configs_path):
         run(cf_path)

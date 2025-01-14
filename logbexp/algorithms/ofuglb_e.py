@@ -18,6 +18,7 @@ ctr : int
 """
 
 import math
+from logbexp.utils.utils import weighted_norm
 
 import numpy as np
 from scipy.optimize import minimize
@@ -36,7 +37,7 @@ def dmu(z):
 
 
 class OFUGLBe(LogisticBandit):
-    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, lazy_update_fr=1):
+    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, lazy_update_fr=1, tol=1e-7):
         """
         :param lazy_update_fr:  integer dictating the frequency at which to do the learning if we want the algo to be lazy (default: 1)
         """
@@ -44,33 +45,32 @@ class OFUGLBe(LogisticBandit):
         self.name = 'OFUGLB-e'
         self.lazy_update_fr = lazy_update_fr
         # initialize some learning attributes
-        self.theta_hat = np.random.normal(0, 1, (self.dim, 1))
-        self.l2_reg = (1 + param_norm_ub) / (2 * param_norm_ub ** 2)
-        self.Ht = self.l2_reg * np.eye(self.dim)
+        self.theta_hat = np.zeros((self.dim, 1))
+        self.l2reg = (1 + param_norm_ub) / (2 * param_norm_ub ** 2)
+        self.Ht = self.l2reg * np.eye(self.dim)
 
         self.ctr = 0
         self.ucb_bonus = 0
         self.log_loss_hat = 0
-        # containers
-        self.arms = []
-        self.rewards = []
         self.T = horizon
+        self.tol = tol
 
     def reset(self):
         """
         Resets the underlying learning algorithm
         """
-        self.theta_hat = np.random.normal(0, 1, (self.dim, 1))
+        self.theta_hat = np.zeros((self.dim, 1))
         self.ctr = 1
-        self.arms = []
-        self.rewards = []
+        self.arms = np.zeros((0, self.dim))
+        self.rewards = np.zeros((0,))
+        self.Ht = self.l2reg * np.eye(self.dim)
 
     def learn(self, arm, reward):
         """
         Updates estimator.
         """
-        self.arms.append(arm)
-        self.rewards.append(reward)
+        self.arms = np.vstack((self.arms, arm))
+        self.rewards = np.concatenate((self.rewards, [reward]))
 
         ## SLSQP
         ineq_cons = {'type': 'ineq',
@@ -79,12 +79,10 @@ class OFUGLBe(LogisticBandit):
                      'jac': lambda theta: 2 * np.array([- theta])}
         opt = minimize(self.neg_log_likelihood_full, x0=np.reshape(self.theta_hat, (-1,)), method='SLSQP',
                        jac=self.neg_log_likelihood_full_J,
-                       constraints=ineq_cons)
-        self.theta_hat = opt.x
+                       constraints=ineq_cons, tol=self.tol)
+        self.theta_hat = np.reshape(opt.x, (-1, 1))
         # update regularized Ht
-        self.Ht = self.l2_reg * np.eye(self.dim)
-        for arm in self.arms:
-            self.Ht += dmu(np.dot(arm, self.theta_hat)) * np.outer(arm, arm)
+        self.Ht = self.hessian(self.theta_hat, self.l2reg)
         # update counter
         self.ctr += 1
 
@@ -103,7 +101,7 @@ class OFUGLBe(LogisticBandit):
 
     def compute_optimistic_reward(self, arm):
         if self.ctr <= 1:
-            res = np.random.normal(0, 1)
+            res = np.linalg.norm(arm)
         else:
-            res = np.dot(self.theta_hat, arm) + np.sqrt(self.ucb_bonus * np.dot(np.dot(arm, np.linalg.inv(self.Ht)), arm))
+            res = self.theta_hat.T @ arm + np.sqrt(self.ucb_bonus) * weighted_norm(arm, np.linalg.inv(self.Ht))
         return res

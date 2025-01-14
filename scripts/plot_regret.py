@@ -1,5 +1,5 @@
 """
-modified by @nick-jhlee
+modified by @nick-jhlee & @kwangsungjun
 originally by @louisfaury
 
 usage: plot_regret.py [-h] [-d [D]] [-hz [HZ]] [-ast [AST]] [-pn [PN]]
@@ -20,6 +20,7 @@ import numpy as np
 import os
 import json
 import seaborn as sns
+import ipdb
 
 from logbexp.utils.utils import dsigmoid
 
@@ -27,24 +28,27 @@ from logbexp.utils.utils import dsigmoid
 parser = argparse.ArgumentParser(description='Plot regret curves, by default for dimension=2 and parameter norm=1',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-d', type=int, nargs='?', default=2, help='Dimension')
-parser.add_argument('-hz', type=int, nargs='?', default=4002, help='Horizon length)')
+parser.add_argument('-hz', type=int, nargs='?', default=2000, help='Horizon length)')
+parser.add_argument('-pn', type=float, nargs='+', default=3.0, help='norm of the unknown parameter')
 parser.add_argument('-ast', type=str, nargs='?', default='tv_discrete',
                     help='Arm set type. Must be either fixed_discrete, tv_discrete or ball')
-parser.add_argument('-S', type=int, nargs='+', help='known norm upper bound of the unknown parameter')
 args = parser.parse_args()
 
 d = args.d
 H = args.hz
-S_list = args.S
+pn_list = args.pn
 arm_set_type = args.ast
 
-for S in S_list:
+# path to logs/
+# logs_dir = f'logs/{arm_set_type}_h_{H}'
+# here = os.path.dirname(os.path.abspath(__file__))
+logs_dir = "logs/regret"
+# logs-24-1124b
+
+for pn in pn_list:
+    S = pn + 1
     plt.figure(S)
     print(r"Plotting regret curves for $d=${}, $H=${}, $S=${}, and arm_set_type={}".format(d, H, S, arm_set_type))
-
-    # path to logs/
-    # logs_dir = f'logs/{arm_set_type}_h_{H}'
-    logs_dir = 'logs/'
 
     # accumulate results
     res_dict_mean = dict()
@@ -83,21 +87,29 @@ for S in S_list:
         # "font.sans-serif": ["Helvetica"],
         "font.size": 17})
 
-    alg_dict = {"OFUGLB": "OFUGLB", "OFUGLB-e": "OFUGLB-e", "EMK": "EMK", "RS-GLinCB": "RS-GLinCB", "OFULogPlus": "OFULog+",
-                "adaECOLog": "ada-OFU-ECOLog"}
-    color_dict = {"OFUGLB": "red", "OFUGLB-e": "orange", "EMK": "blue", "RS-GLinCB": "black", "OFULogPlus": "green",
-                "adaECOLog": "purple"}
-    alpha_dict = {"OFUGLB": 1, "OFUGLB-e": 1, "EMK": 0.4, "RS-GLinCB": 0.4, "OFULogPlus": 0.4, "adaECOLog": 0.4}
+    alg_dict = {"OFUGLB": "OFUGLB", "OFUGLB-e": "OFUGLB-e", "EVILL": "EVILL", "EMK": "EMK", "GLOC": "GLOC",
+                "RS-GLinCB": "RS-GLinCB", "GLM-UCB": "GLM-UCB",
+                "OFULogPlus": "OFULog+", "adaECOLog": "ada-OFU-ECOLog", "OFULog-r": "OFULog-r",
+                "LogUCB1": "LogUCB1", "OL2M": "OL2M"}
+    color_dict = {"OFUGLB": "red", "OFUGLB-e": "orange", "EVILL": "magenta", "EMK": "blue", "GLOC": "yellow",
+                "RS-GLinCB": "black", "GLM-UCB": "brown",
+                "OFULogPlus": "green", "adaECOLog": "purple", "OFULog-r": "cyan",
+                "LogUCB1": "pink", "OL2M": "grey"}
+    ## color_dict proposed by Kwang
+    # {"OFUGLB": "red", "EMK": "orange", "RS-GLinCB": "black", "GLOC": "green",
+    #           "adaECOLog": "purple", "EVILL": "blue"}
+    alpha_dict = {"OFUGLB": 1, "OFUGLB-e": 1, "EVILL": 0.4, "EMK": 0.4, "GLOC": 0.4,
+                    "RS-GLinCB": 0.4, "GLM-UCB": 0.4,
+                    "OFULogPlus": 0.4, "adaECOLog": 0.4, "OFULog-r": 0.4,
+                    "LogUCB1": 0.4, "OL2M": 0.4}
 
-    clrs = sns.color_palette("husl", 4)
     with sns.axes_style("whitegrid"):
-        for i, algorithm in enumerate(["OFUGLB", "EMK"]):
-        # for i, algorithm in enumerate(["OFUGLB", "OFUGLB-e", "RS-GLinCB", "OFULogPlus", "EMK", "adaECOLog"]):
-            alg_name = alg_dict[algorithm]
+        for i, algorithm in enumerate(res_dict_mean.keys()):
             regret = res_dict_mean[algorithm]
             std = res_dict_std[algorithm]
-            plt.plot(regret, label=alg_name, color=color_dict[alg_name], alpha=alpha_dict[alg_name])
-            plt.fill_between(range(len(regret)), regret - std, regret + std, alpha=0.3, color=color_dict[alg_name])
+            plt.plot(regret, label=algorithm, color=color_dict[algorithm], alpha=alpha_dict[algorithm])
+            plt.fill_between(range(len(regret)), regret - std, regret + std, alpha=0.6, color=color_dict[algorithm])
+            print(f'{algorithm:20s}: {regret[-1]:10g} ±{std[-1]:.2g}')
 
     plt.legend(loc='upper left', prop={'size': 19})
     # plt.xlabel(r"$T$")
@@ -117,9 +129,7 @@ for S in S_list:
     # else:
     #     pass
 
-    if not os.path.exists(f"S={S}/{arm_set_type}"):
-        os.makedirs(f"S={S}/{arm_set_type}", exist_ok=True)
-
-    plt.savefig(f"S={S}/{arm_set_type}/regret_S={S}_h={H}.pdf", dpi=300)
-    plt.savefig(f"S={S}/{arm_set_type}/regret_S={S}_h={H}.png", dpi=300)
+    plt.savefig(f"logs/regret_h{H}d{d}n{pn}t{arm_set_type}.pdf", dpi=300)
+    plt.savefig(f"logs/regret_h{H}d{d}n{pn}t{arm_set_type}.png", dpi=300)
     plt.show()
+

@@ -35,7 +35,7 @@ def dmu(z):
 
 class RS_GLinCB(LogisticBandit):
     def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, lazy_update_fr=1, plot_confidence=False,
-                 N_confidence=1000):
+                 N_confidence=1000, tol=1e-7):
         """
         :param lazy_update_fr:  integer dictating the frequency at which to do the learning if we want the algo to be lazy (default: 1)
         """
@@ -51,10 +51,10 @@ class RS_GLinCB(LogisticBandit):
         self.N = N_confidence
         self.T = horizon
 
-        self.triggered_arms = []
-        self.triggered_rewards = []
-        self.nontriggered_arms = []
-        self.nontriggered_rewards = []
+        self.triggered_arms = np.zeros((0, self.dim))
+        self.triggered_rewards = np.zeros((0,))
+        self.nontriggered_arms = np.zeros((0, self.dim))
+        self.nontriggered_rewards = np.zeros((0,))
         self.tau = 1
         self.l2reg = dim * np.log(horizon / failure_level)
         self.gamma = 25 * param_norm_ub * np.sqrt(dim * np.log(horizon / failure_level))
@@ -72,16 +72,17 @@ class RS_GLinCB(LogisticBandit):
         # compute an upper bound on kappa
         self.kappa = 3 + np.exp(param_norm_ub)
         self.warmup_threshold = 1 / (self.gamma ** 2 * self.kappa)
+        self.tol = tol
 
     def reset(self):
         """
         Resets the underlying learning algorithm
         """
         self.ctr = 1
-        self.triggered_arms = []
-        self.triggered_rewards = []
-        self.nontriggered_arms = []
-        self.nontriggered_rewards = []
+        self.triggered_arms = np.zeros((0, self.dim))
+        self.triggered_rewards = np.zeros((0,))
+        self.nontriggered_arms = np.zeros((0, self.dim))
+        self.nontriggered_rewards = np.zeros((0,))
         self.tau = 1
         self.l2reg = self.dim * np.log(self.T / self.failure_level)
         self.gamma = 25 * self.param_norm_ub * np.sqrt(self.dim * np.log(self.T / self.failure_level))
@@ -101,20 +102,20 @@ class RS_GLinCB(LogisticBandit):
         Updates estimator.
         """
         if self.switch1:
-            self.triggered_arms.append(arm)
-            self.triggered_rewards.append(reward)
+            self.triggered_arms = np.vstack((self.triggered_arms, arm))
+            self.triggered_rewards = np.concatenate((self.triggered_rewards, [reward]))
             self.V += np.outer(arm, arm)
             # Sherman-Morrison formula
             self.V_inv -= np.outer(self.V_inv @ arm, self.V_inv @ arm) / (1 + arm.T @ self.V_inv @ arm)
             # compute theta_hat_o
             obj = lambda theta: (self.neg_log_likelihood(theta, self.triggered_arms, self.triggered_rewards)
                                  + (self.l2reg / 2) * np.dot(theta, theta))
-            opt = minimize(obj, x0=np.reshape(self.theta_hat_o, (-1,)))
+            opt = minimize(obj, x0=np.reshape(self.theta_hat_o, (-1,)), tol=self.tol)
             self.theta_hat_o = opt.x
             self.switch1 = False
         else:
-            self.nontriggered_arms.append(arm)
-            self.nontriggered_rewards.append(reward)
+            self.nontriggered_arms = np.vstack((self.nontriggered_arms, arm))
+            self.nontriggered_rewards = np.concatenate((self.nontriggered_rewards, [reward]))
 
     def pull(self, arm_set):
         arm_list = arm_set.arm_list
@@ -137,7 +138,7 @@ class RS_GLinCB(LogisticBandit):
                 obj_J = lambda theta: self.neg_log_likelihood_J(theta, self.nontriggered_arms,
                                                                 self.nontriggered_rewards)
                 opt = minimize(obj, x0=np.reshape(self.theta_hat_tau, (-1,)), method='SLSQP', jac=obj_J,
-                               constraints=ineq_cons)
+                               constraints=ineq_cons, tol=self.tol)
                 self.theta_hat_tau = opt.x
             # arm elimination
             UCB_o = lambda x: (np.dot(x, self.theta_hat_o) +

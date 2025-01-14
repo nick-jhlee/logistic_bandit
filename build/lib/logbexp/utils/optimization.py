@@ -1,9 +1,9 @@
-
 import numpy as np
 
 from numpy.linalg import LinAlgError
 from scipy.linalg import sqrtm
 from scipy.optimize import minimize_scalar
+from scipy.optimize import linprog
 from logbexp.utils.utils import sigmoid
 
 
@@ -103,3 +103,105 @@ def project_ellipsoid(x_to_proj, ell_center, ecc_matrix, radius, safety_check=Fa
     x_projected = np.dot(sqrt_psd_matrix, eta_opt) + ell_center
 
     return x_projected
+
+
+# Thanks to Brano for the code for G-optimal design
+# D-optimal design
+def d_grad(V, p, gamma=1e-6, return_grad=True):
+    """Value of D-optimal objective and its gradient.
+
+    V: n x d x d feature outer products
+    p: distribution over n features (design)
+    """
+    n, d, _ = V.shape
+
+    # inverse of the sample covariance matrix
+    G = np.einsum("ijk,i->jk", V, p) + gamma * np.eye(d)
+    invG = np.linalg.inv(G)
+
+    # objective value (log det)
+    sign, obj = np.linalg.slogdet(G)
+    obj *= - sign
+    if return_grad:
+        # gradient of the objective
+        M = np.einsum("kl,ilj->ikj", invG, V)
+        dp = - np.trace(M, axis1=-2, axis2=-1)
+    else:
+        dp = 0
+
+    return obj, dp
+
+def fw_design(arm_list, pi_0=None, num_iters=100, tol=1e-6, A_ub=None, b_ub=None, printout=False):
+    """Frank-Wolfe algorithm for design optimization.
+
+    V: n x d x d feature outer products
+    pi_0: initial distribution over n features (design)
+    num_iters: maximum number of Frank-Wolfe iterations
+    tol: stop when two consecutive objective values differ by less than tol
+    A_ub: matrix A in design constraints A pi >= b
+    b_ub: vector b in design constraints A pi >= b
+    """
+    X = np.array(arm_list)  # feature matrix
+    V = np.einsum("ij,ik->ijk", X, X)  # feature outer products
+    n, d, _ = V.shape
+
+    if pi_0 is None:
+        # initial allocation weights are 1 / n and they add up to 1
+        pi = np.ones(n) / n
+    else:
+        pi = np.copy(pi_0)
+
+    # initialize constraints
+    if A_ub is None:
+        A_ub_fw = np.ones((1, n))
+        b_ub_fw = 1
+    else:
+        # last constraint guarantees that pi is a distribution
+        A_ub_fw = np.zeros((A_ub.shape[0] + 1, A_ub.shape[1]))
+        A_ub_fw[: -1, :] = A_ub
+        A_ub_fw[-1, :] = np.ones((1, n))
+        b_ub_fw = np.zeros(b_ub.size + 1)
+        b_ub_fw[: -1] = b_ub
+        b_ub_fw[-1] = 1
+
+    # Frank-Wolfe iterations
+    for iter in range(num_iters):
+        # compute gradient at the last solution
+        pi_last = np.copy(pi)
+        last_obj, grad = d_grad(V, pi_last)
+
+        if printout:
+            print("%.4f" % last_obj, end=" ")
+
+        # find a feasible LP solution in the direction of the gradient
+        result = linprog(grad, A_ub_fw, b_ub_fw, bounds=[0, 1], method="highs")
+        pi_lp = result.x
+        pi_lp = np.maximum(pi_lp, 0)
+        pi_lp /= pi_lp.sum()
+
+        # line search in the direction of the gradient
+        num_ls_iters = 100
+        best_step = 0.0
+        best_obj = last_obj
+        for ls_iter in range(num_ls_iters):
+            step = np.power(0.9, ls_iter)
+            pi_ = step * pi_lp + (1 - step) * pi_last
+            obj, _ = d_grad(V, pi_, return_grad=False)
+            if obj < best_obj:
+                # record an improved solution
+                best_step = step
+                best_obj = obj
+
+        # update solution
+        pi = best_step * pi_lp + (1 - best_step) * pi_last
+
+        if last_obj - best_obj < tol:
+            break
+        iter += 1
+
+    if printout:
+        print()
+
+    pi = np.maximum(pi, 0)
+    pi /= pi.sum()
+    return pi

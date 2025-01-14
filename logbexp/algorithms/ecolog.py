@@ -1,4 +1,5 @@
 import numpy as np
+import ipdb
 
 from logbexp.algorithms.logistic_bandit_algo import LogisticBandit
 from logbexp.utils.optimization import fit_online_logistic_estimate, fit_online_logistic_estimate_bar
@@ -29,7 +30,7 @@ class EcoLog(LogisticBandit):
     def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, plot_confidence=False, N_confidence=500):
         super().__init__(param_norm_ub, arm_norm_ub, dim, failure_level)
         self.name = 'adaECOLog'
-        self.l2reg = param_norm_ub
+        self.l2reg = param_norm_ub  # KJ: should be d according to their paper..
         self.vtilde_matrix = self.l2reg * np.eye(self.dim)
         self.vtilde_matrix_inv = (1 / self.l2reg) * np.eye(self.dim)
         self.theta = np.zeros((self.dim,))
@@ -75,18 +76,18 @@ class EcoLog(LogisticBandit):
                                                          np.dot(np.outer(arm, arm), self.vtilde_matrix_inv)) / (
                                           1 + sensitivity * np.dot(arm, np.dot(self.vtilde_matrix_inv, arm)))
 
-        # sensitivity check
-        sensitivity_bar = dsigmoid(np.dot(theta_bar, arm))
-        if sensitivity_bar / sensitivity > 2:
-            msg = f"\033[95m Oops. ECOLog has a problem: the data-dependent condition was not met. This is rare; try increasing the regularization (self.l2reg) \033[95m"
-            raise ValueError(msg)
+        #--- sensitivity check
+        # sensitivity_bar = dsigmoid(np.dot(theta_bar, arm))
+        # if sensitivity_bar / sensitivity > 2:
+        #     msg = f"\033[95m Oops. ECOLog has a problem: the data-dependent condition was not met. This is rare; try increasing the regularization (self.l2reg) \033[95m"
+        #     raise ValueError(msg)
 
         # update sum of losses
         coeff_theta = sigmoid(np.dot(self.theta, arm))
         loss_theta = -reward * np.log(coeff_theta) - (1-reward) * np.log(1-coeff_theta)
         coeff_bar = sigmoid(np.dot(theta_bar, arm))
         loss_theta_bar = -reward * np.log(coeff_bar) - (1-reward) * np.log(1-coeff_bar)
-        self.cum_loss += 2*(1+self.param_norm_ub)*(loss_theta_bar - loss_theta) - 0.5*disc_norm
+        self.cum_loss += loss_theta_bar - loss_theta #- 0.5*disc_norm # KJ. eq 31. I don't think we need to subtract anything..
 
     def pull(self, arm_set):
         # bonus-based version (strictly equivalent to param-based for this algo) of OL2M - see Sec 3.3 of Zhang et al (ICML'16)
@@ -104,11 +105,22 @@ class EcoLog(LogisticBandit):
     def update_ucb_bonus(self):
         """
         Updates the ucb bonus function (a more precise version of Thm3 in ECOLog paper, refined for the no-warm up alg)
+        KJ: see Appendix C.3 of Faury et al. (2022)
         """
-        gamma = np.sqrt(self.l2reg) / 2 + 2 * np.log(
-            2 * np.sqrt(1 + self.ctr / (4 * self.l2reg)) / self.failure_level) / np.sqrt(self.l2reg)
-        res_square = 2*self.l2reg*self.param_norm_ub**2 + (1+self.param_norm_ub)**2*gamma + self.cum_loss
-        self.conf_radius = np.sqrt(res_square)
+        D = self.param_norm_ub
+        nu_paper = .5 + 2 * np.log( 2 * np.sqrt(1 + self.ctr / (4 * self.l2reg)) / self.failure_level)  # Appendix A.1 Eqn. (13)
+        ub1 = (2+D)*nu_paper/4 + D**2/(2+D) # Lemma 5
+        res_square = 4*self.param_norm_ub**2 + 2*(2 + D)*(ub1 + self.cum_loss)   # Lemma 4
+        res_square += 4*np.log(1+self.ctr)  # approximation error (assuming eps_s = 1/s)
+
+        ## PREVIOUS
+        # res_square = 2*self.l2reg*self.param_norm_ub**2 + 2*(2 + D)*(ub1 + self.cum_loss)   # Lemma 4
+        # nu = 2 * np.log( 2 * np.sqrt(1 + self.ctr / (4 * self.l2reg)) / self.failure_level)
+        # gamma = np.sqrt(self.l2reg) / 2 + nu / np.sqrt(self.l2reg)
+        # #- res_square = (almost) beta in the paper
+        # res_square = 2*self.l2reg*self.param_norm_ub**2 + (1+self.param_norm_ub)**2*gamma + self.cum_loss
+        self.conf_radius = np.sqrt(res_square) # KJ: from the paper,  sqrt(beta)
+
 
     def compute_optimistic_reward(self, arm):
         """

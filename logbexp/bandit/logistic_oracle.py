@@ -13,8 +13,9 @@ theta_star: np.array()
 
 
 class LogisticOracle(object):
-    def __init__(self, theta_star):
+    def __init__(self, theta_star, rng):
         self.theta_star = theta_star
+        self.rng = rng
 
     def expected_reward(self, arm):
         """
@@ -26,4 +27,4 @@ class LogisticOracle(object):
         """
         Draw reward according to the Bernoulli distribution associated with arm
         """
-        return int(np.random.uniform(0, 1) < self.expected_reward(arm))
+        return int(self.rng.uniform(0, 1) < self.expected_reward(arm))

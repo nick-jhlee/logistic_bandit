@@ -34,7 +34,7 @@ kappa : float
 
 
 class GlmUCB(LogisticBandit):
-    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, do_proj=False, lazy_update_fr=5):
+    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, do_proj=False, lazy_update_fr=5, tol=1e-7):
         """
         :param do_proj: whether to perform the projection step required by theory (default: False)
         :param lazy_update_fr:  integer dictating the frequency at which to do the learning if we want the algo to be lazy (default: 1)
@@ -47,14 +47,12 @@ class GlmUCB(LogisticBandit):
         self.l2reg = self.dim
         self.design_matrix = self.l2reg * np.eye(self.dim)
         self.design_matrix_inv = (1 / self.l2reg) * np.eye(self.dim)
-        self.theta_hat = np.random.normal(0, 1, (self.dim,))
+        self.theta_hat = np.zeros((self.dim,)) # initialize at zero
         self.theta_tilde = np.random.normal(0, 1, (self.dim,))
         self.ctr = 0
         self.ucb_bonus = 0
         self.kappa = 1 / dsigmoid(self.param_norm_ub * self.arm_norm_ub)
-        # containers
-        self.arms = []
-        self.rewards = []
+        self.tol = tol
 
     def reset(self):
         """
@@ -62,29 +60,26 @@ class GlmUCB(LogisticBandit):
         """
         self.design_matrix = self.l2reg * np.eye(self.dim)
         self.design_matrix_inv = (1 / self.l2reg) * np.eye(self.dim)
-        self.theta_hat = np.random.normal(0, 1, (self.dim,))
+        self.theta_hat = np.zeros((self.dim,)) # reinitialize at zero
         self.theta_tilde = np.random.normal(0, 1, (self.dim,))
         self.ctr = 0
-        self.arms = []
-        self.rewards = []
+        self.arms = np.zeros((0, self.dim))
+        self.rewards = np.zeros((0,))
 
     def learn(self, arm, reward):
         """
         Update the MLE, project if required/needed.
         """
-        self.arms.append(arm)
-        self.rewards.append(reward)
+        self.arms = np.vstack((self.arms, arm))
+        self.rewards = np.concatenate((self.rewards, [reward]))
 
         # learn the m.l.e by iterative approach (a few steps of Newton descent)
         if self.ctr % self.lazy_update_fr == 0 or len(self.rewards) < 200:
             # if lazy we learn with a reduced frequency
             theta_hat = self.theta_hat
             for _ in range(5):
-                coeffs = sigmoid(np.dot(self.arms, theta_hat)[:, None])
-                y = coeffs - np.array(self.rewards)[:, None]
-                grad = self.l2reg * theta_hat + np.sum(y * self.arms, axis=0)
-                hessian = np.dot(np.array(self.arms).T,
-                                 coeffs * (1 - coeffs) * np.array(self.arms)) + self.l2reg * np.eye(self.dim)
+                grad = self.gradient(theta_hat, self.l2reg)
+                hessian = self.hessian(theta_hat, self.l2reg)
                 theta_hat -= np.linalg.solve(hessian, grad)
             self.theta_hat = theta_hat
 
@@ -155,15 +150,16 @@ class GlmUCB(LogisticBandit):
         res = np.sum(arms * coeffs, axis=0) + self.l2reg / self.kappa * theta
         return res
 
-    def hessian(self, theta, arms):
-        coeffs = dsigmoid(np.dot(arms, theta))[:, None]
-        res = np.dot(np.array(arms).T, coeffs * arms) + self.l2reg / self.kappa * np.eye(self.dim)
-        return res
+    ## Junghyun: probably /self.kappa is a typo
+    # def hessian(self, theta, arms):
+    #     coeffs = dsigmoid(np.dot(arms, theta))[:, None]
+    #     res = coeffs * arms.T @ arms + self.l2reg / self.kappa * np.eye(self.dim)
+    #     return res
 
     def projection(self, arms):
         fun = lambda t: self.proj_fun(t, arms)
         grads = lambda t: self.proj_grad(t, arms)
         norm = lambda t: np.linalg.norm(t)
         constraint = NonlinearConstraint(norm, 0, self.param_norm_ub)
-        opt = minimize(fun, x0=np.zeros(self.dim), method='SLSQP', jac=grads, constraints=constraint)
+        opt = minimize(fun, x0=np.zeros(self.dim), method='SLSQP', jac=grads, constraints=constraint, tol=self.tol)
         return opt.x

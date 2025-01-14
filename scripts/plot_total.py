@@ -11,7 +11,7 @@ optional arguments:
   -d [D]      Dimension (default: 2)
   -hz [HZ]    Horizon length (default: 4000)
   -ast [AST]  Dimension (default: tv_discrete)
-  -pn [PN]    Parameter norm (default: 10.0)
+  -pn [PN]    Parameter norm (default: 3.0)
 """
 
 import argparse
@@ -23,17 +23,15 @@ import os
 import json
 import seaborn as sns
 
-from logbexp.utils.utils import dsigmoid
-
 # parser
 parser = argparse.ArgumentParser(description='Plot regret curves, by default for dimension=2 and parameter norm=1',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-d', type=int, nargs='?', default=2, help='Dimension')
-parser.add_argument('-hz', type=int, nargs='?', default=4002, help='Horizon length')
+parser.add_argument('-hz', type=int, nargs='?', default=2000, help='Horizon length')
+parser.add_argument('-pn', type=float, nargs='+', default=3.0, help='norm of the unknown parameter')
 parser.add_argument('-ast', type=str, nargs='?', default='tv_discrete',
                     help='Arm set type. Must be either fixed_discrete, tv_discrete or ball')
-parser.add_argument('-S', type=int, nargs='+', help='known norm upper bound of the unknown parameter')
-parser.add_argument('-Nconfidence', type=int, nargs='?', default=2000,
+parser.add_argument('-Nconfidence', type=int, nargs='?', default=1000,
                     help='Number of discretizations (per axis) for confidence set plot')
 
 args = parser.parse_args()
@@ -42,14 +40,32 @@ d = args.d
 H = args.hz
 arm_set_type = args.ast
 N = args.Nconfidence
-S_list = args.S
+pn_list = args.pn
+
+# path to logs/
+# logs_dir = f'logs/{arm_set_type}_h_{H}'
+# here = os.path.dirname(os.path.abspath(__file__))
+regret_dir, plot_dir = "logs/regret", "logs/plot"
+# logs-24-1124b
+
 print(r"Plotting regret curves and confidence sets for $d=${}, $H=${} and arm_set_type={}".format(d, H, arm_set_type))
 
-alg_dict = {"OFUGLB": "OFUGLB", "OFUGLB-e": "OFUGLB-e", "EMK": "EMK", "RS-GLinCB": "RS-GLinCB", "OFULogPlus": "OFULog+",
-            "adaECOLog": "ada-OFU-ECOLog", "EVILL": "EVILL"}
-color_dict = {"OFUGLB": "red", "OFUGLB-e": "orange", "EMK": "blue", "RS-GLinCB": "black", "OFULogPlus": "green",
-              "adaECOLog": "purple", "EVILL": "brown"}
-alpha_dict = {"OFUGLB": 1, "OFUGLB-e": 1, "EMK": 0.4, "RS-GLinCB": 0.4, "OFULogPlus": 0.4, "adaECOLog": 0.4, "EVILL": 0.4}
+alg_dict = {"OFUGLB": "OFUGLB", "OFUGLB-e": "OFUGLB-e", "EVILL": "EVILL", "EMK": "EMK", "GLOC": "GLOC",
+                "RS-GLinCB": "RS-GLinCB", "GLM-UCB": "GLM-UCB",
+                "OFULogPlus": "OFULog+", "adaECOLog": "ada-OFU-ECOLog", "OFULog-r": "OFULog-r",
+                "LogUCB1": "LogUCB1", "OL2M": "OL2M"}
+color_dict = {"OFUGLB": "red", "OFUGLB-e": "orange", "EVILL": "magenta", "EMK": "blue", "GLOC": "yellow",
+                "RS-GLinCB": "black", "GLM-UCB": "brown",
+                "OFULogPlus": "green", "adaECOLog": "purple", "OFULog-r": "cyan",
+                "LogUCB1": "pink", "OL2M": "grey"}
+## color_dict proposed by Kwang
+# {"OFUGLB": "red", "EMK": "orange", "RS-GLinCB": "black", "GLOC": "green",
+#           "adaECOLog": "purple", "EVILL": "blue"}
+alpha_dict = {"OFUGLB": 1, "OFUGLB-e": 1, "EVILL": 0.4, "EMK": 0.4, "GLOC": 0.4,
+                "RS-GLinCB": 0.4, "GLM-UCB": 0.4,
+                "OFULogPlus": 0.4, "adaECOLog": 0.4, "OFULog-r": 0.4,
+                "LogUCB1": 0.4, "OL2M": 0.4}
+
 clrs = sns.color_palette("husl", 4)
 
 fig, axes = plt.subplots(3, 4, figsize=(30, 20))
@@ -60,7 +76,7 @@ plt.rcParams.update({
     "font.size": 24})
 tick_font_size = 24
 
-cols = [rf"$S={S}$" for S in S_list]
+cols = [fr"$S = {pn+1}$" for pn in pn_list]
 rows = ['Regret plots', 'Magnified regret plots', 'Confidence sets']
 
 for ax, col in zip(axes[0], cols):
@@ -72,17 +88,14 @@ for ax, row in zip(axes[:, 0], rows):
 lines, labels = [], []
 for row in range(3):
     # plot regrets first
-    for plt_idx, S in enumerate(S_list):
+    for plt_idx, pn in enumerate(pn_list):
+        S = pn + 1
         if row != 2:
-            # path to logs/
-            # logs_dir = f'logs/{arm_set_type}_h_{H}'
-            logs_dir = 'logs/'
-
             # accumulate results
             res_dict_mean = dict()
             res_dict_std = dict()
-            for log_path in os.listdir(logs_dir):
-                with open(os.path.join(logs_dir, log_path), 'r', encoding="utf8") as data:
+            for log_path in os.listdir(regret_dir):
+                with open(os.path.join(regret_dir, log_path), 'r', encoding="utf8") as data:
                     log_dict = json.load(data)
                     algo = log_dict["algo_name"]
 
@@ -113,14 +126,13 @@ for row in range(3):
             # plotting
             with sns.axes_style("whitegrid"):
                 tmp = None
-                # for algorithm in ["OFUGLB", "EMK"]:
-                for algorithm in ["OFUGLB", "OFUGLB-e", "EMK", "RS-GLinCB", "OFULogPlus", "adaECOLog", "EVILL"]:
-                    alg_name = alg_dict[algorithm]
+                for i, algorithm in enumerate(res_dict_mean.keys()):
                     regret = res_dict_mean[algorithm]
                     std = res_dict_std[algorithm]
-                    tmp, = axes[row, plt_idx].plot(regret, label=alg_name, color=color_dict[algorithm], alpha=alpha_dict[algorithm])
+                    tmp, = axes[row, plt_idx].plot(regret, label=alg_dict[algorithm], color=color_dict[algorithm], alpha=alpha_dict[algorithm])
                     axes[row, plt_idx].fill_between(range(len(regret)), regret - std, regret + std, alpha=0.3,
                                                     color=color_dict[algorithm])
+                    print(f'{algorithm:20s}: {regret[-1]:10g} ±{std[-1]:.2g}')
                     if plt_idx == 0 and row == 0:
                         lines.append(tmp)
                         labels.append(tmp.get_label())
@@ -169,7 +181,7 @@ for row in range(3):
             interact_rng = np.linspace(-S - 0.5, S + 0.5, N)
             x, y = np.meshgrid(interact_rng, interact_rng)
 
-            fnames = ["OFUGLB.npz", "OFUGLB-e.npz", "EMK.npz", "OFULogPlus.npz"]
+            fnames = [f"h{H}d{d}a{algorithm}n{pn}t{arm_set_type}.npz" for algorithm in alg_dict.keys()]
             # # label location for contourf
             # displacements = [(0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0)]
             # manual_locations = [[[(0.0, 0.0)], [(0.0, 0.0)], [(0.0, 0.0)], [(0.0, 0.0)]],
@@ -177,21 +189,22 @@ for row in range(3):
             #                     [[(0.0, 0.0)], [(0.0, 0.0)], [(0.0, 0.0)], [(0.0, 0.0)]],
             #                     [[(0.0, 0.0)], [(0.0, 0.0)], [(0.0, 0.0)], [(0.0, 0.0)]]]
             # with sns.axes_style("whitegrid"):
-            i = 0
-            for fname in fnames:
-                alg_name = fname.split(".")[0]
-                fname = f"S={S}/{arm_set_type}/{fname}"
+            for i, fname in enumerate(fnames):
+                algorithm = list(alg_dict.keys())[i]
+                if algorithm not in ["OFUGLB", "OFUGLB-e", "EMK", "OFULogPlus", "OFULog-r"]:
+                    print(f"Algorithm {algorithm} not in the list of algorithms to plot. Skipping...")
+                    continue
+                fname = f"{plot_dir}/{fname}"
                 with np.load(fname) as data:
                     z = data['z']
                     # plt.imshow(z, extent=(x.min(), x.max(), y.min(), y.max()), origin="lower", cmap="Greys", alpha=0.5)
-                    CS = axes[row, plt_idx].contour(x, y, z, levels=[0, 1], colors=color_dict[alg_name])
+                    CS = axes[row, plt_idx].contour(x, y, z, levels=[0, 1], colors=color_dict[algorithm])
                     # axes[row, plt_idx].clabel(CS, CS.levels[::2], inline=True, fmt=alg_names[i], fontsize=40,
                     #                           manual=manual_locations[plt_idx][i])
-                    axes[row, plt_idx].contourf(x, y, z, [1 - 1e-12, 1 + 1e-12], colors=color_dict[alg_name],
+                    axes[row, plt_idx].contourf(x, y, z, [1 - 1e-12, 1 + 1e-12], colors=color_dict[algorithm],
                                                 alpha=0.1 + i * 0.05)
 
                     theta_hat = data['theta_hat']
-                    i += 1
                     # axes[row, plt_idx].scatter(theta_hat[0], theta_hat[1], color=colors[i])
                     # axes[row, plt_idx].annotate(r" $\widehat{\theta}$", theta_hat + displacements[i], color=colors[i],
                     #                             fontsize=30)
@@ -226,6 +239,6 @@ for legobj in leg.legend_handles:
 
 fig.tight_layout()
 
-plt.savefig(f"H={H}.pdf", dpi=400, bbox_inches='tight')
-plt.savefig(f"H={H}.png", dpi=400, bbox_inches='tight')
+plt.savefig(f"logs/total_h{H}d{d}n{pn}t{arm_set_type}.pdf", dpi=400, bbox_inches='tight')
+plt.savefig(f"logs/total_h{H}d{d}n{pn}t{arm_set_type}.png", dpi=400, bbox_inches='tight')
 plt.show()

@@ -2,12 +2,15 @@ scripts/logs/
 scripts/logs_plot/
 scripts/logs_runtime/
 scripts/cmd_logs/
+S=3/
 scripts/S=4/
 scripts/S=6/
 scripts/S=8/
 scripts/S=10/
+S=11/
 scripts/S=12/
 scripts/S=20/
+S=21/
 scripts/S=28/
 scripts/S=36/
 scripts/configs/
@@ -15,5 +18,7 @@ scripts/newest_hz_4000/
 scripts/newest_hz_8000/
 scripts/misspecified_S/
 scripts/neurips_rebuttal/
+scripts/logs-*
 build/
 build/lib/logbexp/algorithms/
+ttmp/

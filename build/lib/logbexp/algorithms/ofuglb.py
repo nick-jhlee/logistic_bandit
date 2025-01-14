@@ -22,13 +22,13 @@ from scipy.optimize import minimize
 
 from logbexp.algorithms.logistic_bandit_algo import LogisticBandit
 
-
-def mu(z):
-    return 1 / (1 + np.exp(-z))
-
+#import line_profiler
+import warnings
+warnings.filterwarnings("error", category=RuntimeWarning)
+import ipdb
 
 class OFUGLB(LogisticBandit):
-    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, lazy_update_fr=1):
+    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, lazy_update_fr=1, tol=1e-7):
         """
         :param lazy_update_fr:  integer dictating the frequency at which to do the learning if we want the algo to be lazy (default: 1)
         """
@@ -36,37 +36,40 @@ class OFUGLB(LogisticBandit):
         self.name = 'OFUGLB'
         self.lazy_update_fr = lazy_update_fr
         # initialize some learning attributes
-        self.theta_hat = np.random.normal(0, 1, (self.dim, 1))
+        self.theta_hat = np.zeros(self.dim)
         self.ctr = 0
         self.ucb_bonus = 0
         self.log_loss_hat = 0
         self.T = horizon
+        self.tol = tol
 
     def reset(self):
         """
         Resets the underlying learning algorithm
         """
-        self.theta_hat = np.random.normal(0, 1, (self.dim, 1))
+        self.theta_hat = np.zeros(self.dim)
         self.ctr = 1
-        self.arms = []
-        self.rewards = []
+        self.arms = np.zeros((0, self.dim))
+        self.rewards = np.zeros((0,))
 
     def learn(self, arm, reward):
         """
         Updates estimator.
         """
-        self.arms.append(arm)
-        self.rewards.append(reward)
+        self.arms = np.vstack((self.arms, arm))
+        self.rewards = np.concatenate((self.rewards, [reward]))
 
-        ## SLSQP
-        ineq_cons = {'type': 'ineq',
-                     'fun': lambda theta: np.array([
-                         self.param_norm_ub ** 2 - np.dot(theta, theta)]),
-                     'jac': lambda theta: 2 * np.array([- theta])}
-        opt = minimize(self.neg_log_likelihood_full, x0=np.reshape(self.theta_hat, (-1,)), method='SLSQP',
+        # SLSQP
+        ineq_cons = {   'type': 'ineq',
+                        'fun': lambda theta: 
+                               self.param_norm_ub ** 2 - np.dot(theta, theta),
+                        'jac': lambda theta: 2 * theta
+                    }
+        opt = minimize(self.neg_log_likelihood_full, x0=self.theta_hat, method='SLSQP',
                        jac=self.neg_log_likelihood_full_J,
-                       constraints=ineq_cons)
+                       constraints=ineq_cons, tol=self.tol)
         self.theta_hat = opt.x
+
         # update counter
         self.ctr += 1
 
@@ -84,17 +87,23 @@ class OFUGLB(LogisticBandit):
 
     def compute_optimistic_reward(self, arm):
         if self.ctr <= 1:
-            res = np.random.normal(0, 1)
+            res = np.linalg.norm(arm)   # at t = 1, pull the arm with the largest norm
         else:
+            def ff(theta):
+                f1 = self.ucb_bonus - (self.neg_log_likelihood_full(theta) - self.log_loss_hat)
+                f2 = self.param_norm_ub ** 2 - np.dot(theta, theta)
+                return np.array([f1, f2])
+
+            def gg(theta):
+                return -np.vstack((self.neg_log_likelihood_full_J(theta).T, 2 * theta))
+
             ## SLSQP
             obj = lambda theta: -np.sum(arm * theta)
             obj_J = lambda theta: -arm
             ineq_cons = {'type': 'ineq',
-                         'fun': lambda theta: np.array([
-                             self.ucb_bonus - (self.neg_log_likelihood_full(theta) - self.log_loss_hat),
-                             self.param_norm_ub ** 2 - np.dot(theta, theta)]),
-                         'jac': lambda theta: - np.vstack((self.neg_log_likelihood_full_J(theta).T, 2 * theta))}
-            opt = minimize(obj, x0=self.theta_hat, method='SLSQP', jac=obj_J, constraints=ineq_cons)
+                         'fun': ff,
+                         'jac': gg, }
+            opt = minimize(obj, x0=self.theta_hat, method='SLSQP', jac=obj_J, constraints=ineq_cons, tol=self.tol)
             res = np.sum(arm * opt.x)
 
             ## CVXPY

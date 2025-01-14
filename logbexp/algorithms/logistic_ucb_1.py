@@ -46,13 +46,11 @@ class LogisticUCB1(LogisticBandit):
         self.design_matrix = self.l2reg * np.eye(self.dim)
         self.design_matrix_inv = (1 / self.l2reg) * np.eye(self.dim)
         self.hessian_matrix = self.l2reg * np.eye(self.dim)
-        self.theta_hat = np.random.normal(0, 1, (self.dim,))
+        # self.theta_hat = np.random.normal(0, 1, (self.dim,))
+        self.theta_hat = np.zeros((self.dim,))
         self.ctr = 0
         self.ucb_bonus = 0
         self.kappa = 1 / dsigmoid(self.param_norm_ub * self.arm_norm_ub)
-        # containers
-        self.arms = []
-        self.rewards = []
 
     def reset(self):
         """
@@ -61,17 +59,18 @@ class LogisticUCB1(LogisticBandit):
         self.hessian_matrix = self.l2reg * np.eye(self.dim)
         self.design_matrix = self.l2reg * np.eye(self.dim)
         self.design_matrix_inv = (1 / self.l2reg) * np.eye(self.dim)
-        self.theta_hat = np.random.normal(0, 1, (self.dim,))
+        # self.theta_hat = np.random.normal(0, 1, (self.dim,))
+        self.theta_hat = np.zeros((self.dim,))
         self.ctr = 0
-        self.arms = []
-        self.rewards = []
+        self.arms = np.zeros((0, self.dim))
+        self.rewards = np.zeros((0,))
 
     def learn(self, arm, reward):
         """
         Updates estimators.
         """
-        self.arms.append(arm)
-        self.rewards.append(reward)
+        self.arms = np.vstack((self.arms, arm))
+        self.rewards = np.concatenate((self.rewards, [reward]))
 
         # learn the m.l.e by iterative approach (a few steps of Newton descent)
         self.l2reg = self.dim * np.log(2 + len(self.rewards))
@@ -79,11 +78,8 @@ class LogisticUCB1(LogisticBandit):
             # if lazy we learn with a reduced frequency
             theta_hat = self.theta_hat
             for _ in range(5):
-                coeffs = sigmoid(np.dot(self.arms, theta_hat)[:, None])
-                y = coeffs - np.array(self.rewards)[:, None]
-                grad = self.l2reg * theta_hat + np.sum(y * self.arms, axis=0)
-                hessian = np.dot(np.array(self.arms).T,
-                                 coeffs * (1 - coeffs) * np.array(self.arms)) + self.l2reg * np.eye(self.dim)
+                grad = self.gradient(theta_hat, self.l2reg)
+                hessian = self.hessian(theta_hat, self.l2reg)
                 theta_hat -= np.linalg.solve(hessian, grad)
             self.theta_hat = theta_hat
             self.hessian_matrix = hessian

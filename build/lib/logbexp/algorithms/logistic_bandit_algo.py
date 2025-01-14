@@ -1,4 +1,5 @@
 from logbexp.utils.utils import *
+import ipdb
 
 
 class LogisticBandit(object):
@@ -37,8 +38,9 @@ class LogisticBandit(object):
         self.failure_level = failure_level
         self.name = None
         self.arm_set_type = None
-        self.arms = []
-        self.rewards = []
+        # history of arms and rewards
+        self.arms = np.zeros((0, self.dim))
+        self.rewards = np.zeros((0,))
 
     def pull(self, arm_set):
         raise NotImplementedError
@@ -49,31 +51,37 @@ class LogisticBandit(object):
     def reset(self):
         raise NotImplementedError
 
+    def gradient(self, theta, l2reg=0):
+        """
+        Computes the gradient of the negative log-likelihood at theta
+        """
+        mu_dots = dsigmoid(self.arms @ theta)
+        return self.arms.T @ (mu_dots - self.rewards) + l2reg * theta
+
+    def hessian(self, theta, l2reg=0):
+        """
+        Computes the Hessian of the negative log-likelihood at theta
+        """
+        mu_dots = np.reshape(dsigmoid(self.arms @ theta), (-1, 1))
+        return self.arms.T @ (mu_dots * self.arms) + l2reg * np.eye(self.dim)
+
     def neg_log_likelihood(self, theta, arms, rewards):
         """
-        Computes the negative log likelihood at theta, over the prescribed arms and rewards
         """
         if len(rewards) == 0:
             return 0
         else:
-            X = np.array(arms)
-            r = np.array(rewards).reshape((-1, 1))
-            theta = theta.reshape((-1, 1))
-            # print(X.shape, r.shape)
-            return - np.sum(r * np.log(sigmoid(X @ theta)) + (1 - r) * np.log(sigmoid(- X @ theta)))
+            arms_theta = arms @ theta
+            return - np.sum(rewards * np.log(sigmoid(arms_theta)) + (1 - rewards) * np.log(sigmoid(- arms_theta)))
 
     def neg_log_likelihood_J(self, theta, arms, rewards):
         """
         Derivative of neg_log_likelihood
         """
         if len(rewards) == 0:
-            return np.zeros((self.dim, 1))
+            return np.zeros(self.dim)
         else:
-            X = np.array(arms)
-            r = np.array(rewards).reshape((-1, 1))
-            theta = theta.reshape((-1, 1))
-            # print(X.shape, r.shape)
-            return np.sum((sigmoid(X @ theta) - r) * X, axis=0).reshape((self.dim, 1))
+            return arms.T @ (sigmoid(arms @ theta) - rewards)
 
     def neg_log_likelihood_full(self, theta):
         """
@@ -96,21 +104,18 @@ class LogisticBandit(object):
         if len(self.rewards) == 0:
             return 0
         else:
-            X = np.array(self.arms)
-            rewards = np.array(self.rewards)
-
             # Initialize the result arrays
             tmp1_sum = np.zeros((grid.shape[1], grid.shape[2]))
             tmp2_sum = np.zeros((grid.shape[1], grid.shape[2]))
 
             # Split arrays into chunks to include the remainder
             chunk_size = 100  # Adjust this based on your memory capacity
-            num_sections = np.ceil(X.shape[0] / chunk_size)
-            X_chunks = np.array_split(X, num_sections)
-            rewards_chunks = np.array_split(rewards, num_sections)
+            num_sections = np.ceil(self.arms.shape[0] / chunk_size)
+            arms_chunks = np.array_split(self.arms, num_sections)
+            rewards_chunks = np.array_split(self.rewards, num_sections)
 
-            for X_chunk, rewards_chunk in zip(X_chunks, rewards_chunks):
-                tmp_chunk = np.einsum('td,dij->tij', X_chunk, grid)
+            for arms_chunk, rewards_chunk in zip(arms_chunks, rewards_chunks):
+                tmp_chunk = np.einsum('td,dij->tij', arms_chunk, grid)
                 tmp1_chunk = np.einsum('t,tij->ij', rewards_chunk, np.log(sigmoid(tmp_chunk)))
                 tmp2_chunk = np.einsum('t,tij->ij', (1 - rewards_chunk), np.log(sigmoid(-tmp_chunk)))
 

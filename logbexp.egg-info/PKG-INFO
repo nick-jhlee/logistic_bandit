@@ -25,7 +25,7 @@ If you plan to use this repository or cite our paper, please use the following b
 	publisher = {Curran Associates, Inc.},
 	volume = {37},
 	year = {2024},
-	url = {https://arxiv.org/abs/2407.13977},
+	url = {https://openreview.net/forum?id=MDdOQayWTA},
 }
 
 @InProceedings{lee2024logistic,
@@ -55,7 +55,7 @@ Every time one changes the source code, one should run `pip install .` again to 
 
 This code implements the following bandit algorithms (oldest to newest):
 
-Only applicable for linear bandits:
+Only applicable for linear bandits (NOT YET IMPLEMENTED):
 - `OFUL` ([Abbasi-Yadkori et al. 2011](https://papers.nips.cc/paper/2011/file/7f1c3f338b8e2e9d6b5e8e4e7f3b4208-Paper.pdf))
 - `CMM-UCB` ([Flynn et al. 2023](https://openreview.net/forum?id=TXoZiUZywf&noteId=hiOPt0S3AO)) : not yet implemented..
 
@@ -101,7 +101,7 @@ Plot regret curves
 optional arguments:
   -h, --help  show this help message and exit
   -d [D]      Dimension (default: 2)
-  -hz [HZ]    Horizon length (default: 4000)
+  -hz [HZ]    Horizon length (default: 2000)
   -ast [AST]  Dimension (default: tv_discrete)
   -pn [PN]    Parameter norm (default: 9.0)
 ```
@@ -133,7 +133,7 @@ Plot regret curves
 optional arguments:
   -h, --help  show this help message and exit
   -d [D]      Dimension (default: 2)
-  -hz [HZ]    Horizon length (default: 4000)
+  -hz [HZ]    Horizon length (default: 2000)
   -ast [AST]  Dimension (default: tv_discrete)
   -Nconfidence [N]    Number of discretizations (per axis) for confidence set plot (default: 2000)
 ```
@@ -158,11 +158,11 @@ optional arguments:
   -pn PN [PN ...]       Parameter norm (||theta_star|| = S - 1) (default: None)
   -algos ALGOS [ALGOS ...]
                         List of algorithms. (default: None)
-                        ('EVILL', 'EMK', 'RS-GLinCB', 'OFUGLB-e', 'OFUGLB', 'OFULogPlus', 'adaECOLog', 'OFULog-r', 'LogUCB1', 'OL2M', 'GLOC', 'GLM-UCB')
+                        ('OL2M', 'LogUCB1', 'OFULog-r', 'adaECOLog', 'OFULogPlus', 'GLM-UCB', 'RS-GLinCB', 'GLOC', 'EMK', 'EVILL', 'OFUGLB-e', 'OFUGLB')
   -r [R]                # of independent runs (default: 10)
-  -hz [HZ]              Horizon, normalized (later multiplied by sqrt(dim)) (default: 2000)
+  -hz [HZ]              Horizon length (default: 2000)
   -ast [AST]            Arm set type. Must be either fixed_discrete, tv_discrete or ball (default: tv_discrete)
-  -ass [ASS]            Arm set size, normalized (later multiplied by dim) (default: 10)
+  -ass [ASS]            Arm set size (default: 10)
   -fl [FL]              Failure level, must be in (0,1) (default: 0.05)
   -plotconfidence [N]   To plot the confidence set at the end or not (default: False)
   -Nconfidence [N]      Number of discretizations (per axis) for confidence set plot

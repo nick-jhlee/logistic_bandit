@@ -3,6 +3,7 @@ from scipy.linalg import sqrtm
 
 
 def sigmoid(x):
+    x = np.clip(x, -500, 500)
     return 1/(1+np.exp(-x))
 
 
@@ -11,7 +12,7 @@ def dsigmoid(x):
 
 
 def weighted_norm(x, A):
-    return np.sqrt(np.dot(x, np.dot(A, x)))
+    return np.sqrt(x.T @ A @ x)
 
 
 def gaussian_sample_ellipsoid(center, design, radius):

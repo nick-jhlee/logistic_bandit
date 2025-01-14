@@ -16,7 +16,6 @@ logbexp/algorithms/gloc.py
 logbexp/algorithms/logistic_bandit_algo.py
 logbexp/algorithms/logistic_ucb_1.py
 logbexp/algorithms/ofuglb.py
-logbexp/algorithms/ofuglb_ball_e.py
 logbexp/algorithms/ofuglb_e.py
 logbexp/algorithms/ofulogplus.py
 logbexp/algorithms/ofulogr.py

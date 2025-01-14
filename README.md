@@ -14,7 +14,7 @@ If you plan to use this repository or cite our paper, please use the following b
 	publisher = {Curran Associates, Inc.},
 	volume = {37},
 	year = {2024},
-	url = {https://arxiv.org/abs/2407.13977},
+	url = {https://openreview.net/forum?id=MDdOQayWTA},
 }
 
 @InProceedings{lee2024logistic,
@@ -44,7 +44,7 @@ Every time one changes the source code, one should run `pip install .` again to 
 
 This code implements the following bandit algorithms (oldest to newest):
 
-Only applicable for linear bandits:
+Only applicable for linear bandits (NOT YET IMPLEMENTED):
 - `OFUL` ([Abbasi-Yadkori et al. 2011](https://papers.nips.cc/paper/2011/file/7f1c3f338b8e2e9d6b5e8e4e7f3b4208-Paper.pdf))
 - `CMM-UCB` ([Flynn et al. 2023](https://openreview.net/forum?id=TXoZiUZywf&noteId=hiOPt0S3AO)) : not yet implemented..
 
@@ -75,7 +75,7 @@ For the first three algorithms, TS is automatically triggered for unit ball arm-
 Single experiments (one algorithm for one environment) can be run via `scripts/run_example.py`. The script instantiate the algorithm and environment indicated in the file `scripts/configs/example_config.py` and plots the regret.
 
 ## Reproducing the experiments
-The results in the paper can be obtained via `scripts/run_all.py`. This script runs experiments for any config file in `scripts/configs/generated_configs/` and stores the result in `scripts/logs/`.
+The results in the paper can be obtained via `scripts/run_all.py`, with the pre-generated configs. This script runs experiments for any config file in `scripts/configs/generated_configs/` and stores the result in `scripts/logs/`.
 
 
 ## Plot results
@@ -83,16 +83,16 @@ The results in the paper can be obtained via `scripts/run_all.py`. This script r
 You can use `scripts/plot_regret.py` to plot the regret curve for a specific S. This scripts plot regret curves for all logs in `scripts/logs/` that match the indicated dimension and parameter norm. 
 
 ```
-usage: plot_regret.py [-h] [-d [D]] [-hz [HZ]] [-ast [AST]] [-pn [PN]]
+usage: plot_regret.py [-h] [-d [D]] [-hz [HZ]] [-pn [PN]] [-ast [AST]]
 
 Plot regret curves
 
 optional arguments:
   -h, --help  show this help message and exit
   -d [D]      Dimension (default: 2)
-  -hz [HZ]    Horizon length (default: 4000)
+  -hz [HZ]    Horizon length (default: 2000)
+  -pn [PN]    Parameter norm (default: 3.0)
   -ast [AST]  Dimension (default: tv_discrete)
-  -pn [PN]    Parameter norm (default: 9.0)
 ```
 
 
@@ -100,29 +100,33 @@ optional arguments:
 You can use `scripts/plot_confidence.py` to plot confidence sets. This scripts plot confidence sets for all logs in `scripts/S=*`.
 
 ```
-usage: plot_confidence.py [-h] [-ast [AST]] [-pn [PN]] [-Nconfidence [N]]
+usage: plot_confidence.py [-h] [-d [D]] [-hz [HZ]] [-pn [PN]] [-ast [AST]] [-Nconfidence [N]] [-algos [ALGOS [ALGOS ...]]]
 
 Plot confidence sets for all algorithms
 
 optional arguments:
   -h, --help          show this help message and exit
+  -d [D]      Dimension (default: 2)
+  -hz [HZ]    Horizon length (default: 2000)
+  -pn [PN]            Parameter norm (default: 3.0)
   -ast [AST]          Dimension (default: tv_discrete)
-  -pn [PN]            Parameter norm (default: 9.0)
   -Nconfidence [N]    Number of discretizations (per axis) for confidence set plot (default: 2000)
+  -algos [ALGOS [ALGOS ...]]    Algorithms with which we will plot the confidence set (default: ['OFUGLB', 'OFUGLB-e', 'EMK' ,'OFULogPlus'])
 ```
 
 ### Plotting everything together
 You can use `scripts/plot_total.py` to plot everything (Figure 1 of [Lee et al. 2024b](https://arxiv.org/abs/2407.13977))
 
 ```
-usage: plot_total.py [-h] [-d [D]] [-hz [HZ]] [-ast [AST]] [-Nconfidence [N]]
+usage: plot_total.py [-h] [-d [D]] [-hz [HZ]] [-pn [PN]] [-ast [AST]] [-Nconfidence [N]]
 
 Plot regret curves
 
 optional arguments:
   -h, --help  show this help message and exit
   -d [D]      Dimension (default: 2)
-  -hz [HZ]    Horizon length (default: 4000)
+  -hz [HZ]    Horizon length (default: 2000)
+  -pn [PN]    Parameter norm (default: 3.0)
   -ast [AST]  Dimension (default: tv_discrete)
   -Nconfidence [N]    Number of discretizations (per axis) for confidence set plot (default: 2000)
 ```
@@ -147,14 +151,18 @@ optional arguments:
   -pn PN [PN ...]       Parameter norm (||theta_star|| = S - 1) (default: None)
   -algos ALGOS [ALGOS ...]
                         List of algorithms. (default: None)
-                        ('EVILL', 'EMK', 'RS-GLinCB', 'OFUGLB-e', 'OFUGLB', 'OFULogPlus', 'adaECOLog', 'OFULog-r', 'LogUCB1', 'OL2M', 'GLOC', 'GLM-UCB')
+                        ('OL2M', 'LogUCB1', 'OFULog-r', 'adaECOLog', 'OFULogPlus', 'GLM-UCB', 'RS-GLinCB', 'GLOC', 'EMK', 'EVILL', 'OFUGLB-e', 'OFUGLB')
   -r [R]                # of independent runs (default: 10)
-  -hz [HZ]              Horizon, normalized (later multiplied by sqrt(dim)) (default: 2000)
-  -ast [AST]            Arm set type. Must be either fixed_discrete, tv_discrete or ball (default: tv_discrete)
-  -ass [ASS]            Arm set size, normalized (later multiplied by dim) (default: 10)
+  -hz [HZ]              Horizon length (default: 2000)
+  -ast [AST]            Arm set type. Must be either fixed_discrete, tv_discrete, ball, or movielens (default: tv_discrete)
+  -ass [ASS]            Arm set size (default: 10)
   -fl [FL]              Failure level, must be in (0,1) (default: 0.05)
   -plotconfidence [N]   To plot the confidence set at the end or not (default: False)
   -Nconfidence [N]      Number of discretizations (per axis) for confidence set plot
+  -tol [TOL]            Tolerance for optimization (default: 1e-5)
+  -seed [SEED]          Random seed for experiments (default: 9817)
+  -theta_flag [THETA_FLAG]  1 for theta being aligned with the largest eigenvector and 2 for the opposite (default: None)
+  -arm_option [ARM_OPTION]  '\'normalize\' for normalizing (default: None)
 ```
 
 For instance running `python generate_configs.py -dims 2 -pn 3 4 5 -algos OFUGLB adaECOLog` generates configs in dimension 2 for `OFUGLB` and `adaECOLog`, for environments (set as defaults) of ground-truth norm 3, 4 and 5.
