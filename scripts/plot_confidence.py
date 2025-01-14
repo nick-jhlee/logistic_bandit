@@ -51,8 +51,8 @@ alg_dict = {"OFUGLB": "OFUGLB", "OFUGLB-e": "OFUGLB-e", "EVILL": "EVILL", "EMK":
                 "RS-GLinCB": "RS-GLinCB", "GLM-UCB": "GLM-UCB",
                 "OFULogPlus": "OFULog+", "adaECOLog": "ada-OFU-ECOLog", "OFULog-r": "OFULog-r",
                 "LogUCB1": "LogUCB1", "OL2M": "OL2M"}
-color_dict = {"OFUGLB": "red", "OFUGLB-e": "orange", "EVILL": "magenta", "EMK": "blue", "GLOC": "yellow",
-                "RS-GLinCB": "black", "GLM-UCB": "brown",
+color_dict = {"OFUGLB": "red", "OFUGLB-e": "orange", "EVILL": "brown", "EMK": "blue", "GLOC": "yellow",
+                "RS-GLinCB": "black", "GLM-UCB": "magenta",
                 "OFULogPlus": "green", "adaECOLog": "purple", "OFULog-r": "cyan",
                 "LogUCB1": "pink", "OL2M": "grey"}
 ## color_dict proposed by Kwang

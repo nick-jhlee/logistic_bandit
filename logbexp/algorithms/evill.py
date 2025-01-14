@@ -37,7 +37,7 @@ def dmu(z):
 
 # TODO: change the hyperparameter as in Appendix E of Janz et al. (2024)
 class EVILL(LogisticBandit):
-    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, lazy_update_fr=1, tol=1e-7):
+    def __init__(self, param_norm_ub, arm_norm_ub, dim, failure_level, horizon, lazy_update_fr=1, tol=1e-7, arm_set_type=True):
         """
         :param lazy_update_fr:  integer dictating the frequency at which to do the learning if we want the algo to be lazy (default: 1)
         """
@@ -72,6 +72,9 @@ class EVILL(LogisticBandit):
         self.V_invertible = False
         self.design = None
 
+        # whether arm set is fixed or not
+        self.arm_set_type = arm_set_type
+
     def reset(self):
         """
         Resets the underlying learning algorithm
@@ -93,31 +96,37 @@ class EVILL(LogisticBandit):
 
     def pull(self, arm_set):
         arm_list = arm_set.arm_list
-        # At t = 1, compute G-optimal design via Frank-Wolfe (thx to Brano for the codes!)
-        if self.ctr == 1:
-            self.design = fw_design(arm_list)
-
-        ## WARMUP via sampling from the G-optimal design until the criterion is satisfied
-        ## See Appendix B of Janz et al. (AISTATS '24) and references therein
-        if not self.V_invertible:
-            # sample an index from design
-            idx = np.random.choice(len(self.design), 1, p=self.design)[0]
-            arm = np.reshape(arm_list[idx], (-1,))
-            self.V_tau += np.outer(arm, arm)
-            if np.linalg.det(self.V_tau) != 0:
-                self.V_tau_inv = np.linalg.inv(self.V_tau)
-                self.V_invertible = True
-            return arm
-        elif max([arm.T @ self.V_tau_inv @ arm for arm in arm_list]) > self.b:
-            # sample an index from design
-            idx = np.random.choice(len(self.design), 1, p=self.design)[0]
-            arm = np.reshape(arm_list[idx], (-1,))
-            self.V_tau += np.outer(arm, arm)
-            self.V_tau_inv -= np.outer(self.V_tau_inv @ arm, self.V_tau_inv @ arm) / (1 + arm @ self.V_tau_inv @ arm)   # Sherman-Morrison formula
-            return arm
-        else:
+        # if the arm-set is time-varying, then skip the warmup stage
+        if self.arm_set_type in ["tv-discrete", "movielens"]:
             arm = np.reshape(arm_set.argmax(self.compute_optimistic_reward), (-1,))
             return arm
+        # if the arm-set is fixed, then perform the theoretical EVILL
+        else:
+            # At t = 1, compute G-optimal design via Frank-Wolfe (thx to Brano for the codes!)
+            if self.ctr == 1:
+                self.design = fw_design(arm_list)
+
+            ## WARMUP via sampling from the G-optimal design until the criterion is satisfied
+            ## See Appendix B of Janz et al. (AISTATS '24) and references therein
+            if not self.V_invertible:
+                # sample an index from design
+                idx = np.random.choice(len(self.design), 1, p=self.design)[0]
+                arm = np.reshape(arm_list[idx], (-1,))
+                self.V_tau += np.outer(arm, arm)
+                if np.linalg.det(self.V_tau) != 0:
+                    self.V_tau_inv = np.linalg.inv(self.V_tau)
+                    self.V_invertible = True
+                return arm
+            elif max([arm.T @ self.V_tau_inv @ arm for arm in arm_list]) > self.b:
+                # sample an index from design
+                idx = np.random.choice(len(self.design), 1, p=self.design)[0]
+                arm = np.reshape(arm_list[idx], (-1,))
+                self.V_tau += np.outer(arm, arm)
+                self.V_tau_inv -= np.outer(self.V_tau_inv @ arm, self.V_tau_inv @ arm) / (1 + arm @ self.V_tau_inv @ arm)   # Sherman-Morrison formula
+                return arm
+            else:
+                arm = np.reshape(arm_set.argmax(self.compute_optimistic_reward), (-1,))
+                return arm
 
     def compute_optimistic_reward(self, arm):
         # mean_theta, _ = irls(self.theta, self.arms, self.arm_outer_prods, self.num_pos,
@@ -131,43 +140,45 @@ class EVILL(LogisticBandit):
         #                 regularisation=1.0, pre_perturbation=z, post_perturbation=y)
         #
         # mu = clipped_sigmoid(self.arms @ theta)
+        if self.ctr <= 1:
+            return np.linalg.norm(arm)
+        else:
+            # original MLE (line 2)
+            ineq_cons = {'type': 'ineq',
+                         'fun': lambda theta: self.param_norm_ub ** 2 - np.dot(theta, theta),
+                         'jac': lambda theta: -2 * theta
+                        }
+            obj = lambda theta: self.neg_log_likelihood_full(theta)
+            obj_J = lambda theta: self.neg_log_likelihood_full_J(theta)
+            theta_hat_resized = np.reshape(self.theta_hat, (-1,))
+            opt = minimize(obj, x0=theta_hat_resized, method='SLSQP', jac=obj_J,
+                           constraints=ineq_cons, tol=self.tol)
+            self.theta_hat = np.reshape(opt.x, (-1, 1))
+            # self.theta_hats.append(self.theta_hat)
 
-        # original MLE (line 2)
-        ineq_cons = {'type': 'ineq',
-                     'fun': lambda theta: self.param_norm_ub ** 2 - np.dot(theta, theta),
-                     'jac': lambda theta: -2 * theta
-                    }
-        obj = lambda theta: self.neg_log_likelihood_full(theta)
-        obj_J = lambda theta: self.neg_log_likelihood_full_J(theta)
-        theta_hat_resized = np.reshape(self.theta_hat, (-1,))
-        opt = minimize(obj, x0=theta_hat_resized, method='SLSQP', jac=obj_J,
-                       constraints=ineq_cons, tol=self.tol)
-        self.theta_hat = np.reshape(opt.x, (-1, 1))
-        # self.theta_hats.append(self.theta_hat)
+            # sample random perturbation (line 3)
+            zt = np.random.normal(0, 1, (self.dim, ))
+            zt_ = np.random.normal(0, 1, (self.ctr - 1, ))
 
-        # sample random perturbation (line 3)
-        zt = np.random.normal(0, 1, (self.dim, ))
-        zt_ = np.random.normal(0, 1, (self.ctr - 1, ))
+            # compute perturbation vector (line 4)
+            # print(self.arms[0])
+            # print(np.shape(np.vstack(self.arms)), np.shape(self.theta_hat), np.shape(zt_))
+            wt = self.gamma * ( np.sqrt(self.l2reg) * zt + np.sum(np.sqrt(dmu(self.arms @ self.theta_hat)) * zt_))
 
-        # compute perturbation vector (line 4)
-        # print(self.arms[0])
-        # print(np.shape(np.vstack(self.arms)), np.shape(self.theta_hat), np.shape(zt_))
-        wt = self.gamma * ( np.sqrt(self.l2reg) * zt + np.sum(np.sqrt(dmu(self.arms @ self.theta_hat)) * zt_))
+            # compute perturbed MLE (line 5)
+            ineq_cons = {'type': 'ineq',
+                         'fun': lambda theta: self.param_norm_ub ** 2 - np.dot(theta, theta),
+                         'jac': lambda theta: -2 *theta
+                        }
+            obj = lambda theta: self.neg_log_likelihood_full(theta) + np.dot(wt.T, theta)
+            obj_J = lambda theta: self.neg_log_likelihood_full_J(theta) + wt
+            theta_hat_resized = np.reshape(self.theta_hat, (-1,))
+            opt = minimize(obj, x0=theta_hat_resized, method='SLSQP', jac=obj_J,
+                           constraints=ineq_cons, tol=self.tol)
+            self.theta_perturbed = np.reshape(opt.x, (-1, 1))
 
-        # compute perturbed MLE (line 5)
-        ineq_cons = {'type': 'ineq',
-                     'fun': lambda theta: self.param_norm_ub ** 2 - np.dot(theta, theta),
-                     'jac': lambda theta: -2 *theta
-                    }
-        obj = lambda theta: self.neg_log_likelihood_full(theta) + np.dot(wt.T, theta)
-        obj_J = lambda theta: self.neg_log_likelihood_full_J(theta) + wt
-        theta_hat_resized = np.reshape(self.theta_hat, (-1,))
-        opt = minimize(obj, x0=theta_hat_resized, method='SLSQP', jac=obj_J,
-                       constraints=ineq_cons, tol=self.tol)
-        self.theta_perturbed = np.reshape(opt.x, (-1, 1))
-
-        # return perturbed optimistic reward
-        return mu(np.dot(arm, self.theta_perturbed))
+            # return perturbed optimistic reward
+            return np.dot(arm, self.theta_perturbed)
 
 
     # # from DavidJanz

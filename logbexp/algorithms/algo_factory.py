@@ -116,7 +116,8 @@ def create_algo(config):
                          dim=config["dim"],
                          failure_level=config["failure_level"],
                          horizon=config["horizon"],
-                         tol=config["tol"])
+                         tol=config["tol"],
+                         arm_set_type=config["arm_set_type"])
     if algo is None:
         raise ValueError("Oops. The algorithm {} is not implemented. You must choose within ({})".format(
             config["algo_name"], ''.join(['\'' + elem + '\'' + ', ' for elem in ALGOS])))

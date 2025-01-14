@@ -91,10 +91,10 @@ for pn in pn_list:
                 "RS-GLinCB": "RS-GLinCB", "GLM-UCB": "GLM-UCB",
                 "OFULogPlus": "OFULog+", "adaECOLog": "ada-OFU-ECOLog", "OFULog-r": "OFULog-r",
                 "LogUCB1": "LogUCB1", "OL2M": "OL2M"}
-    color_dict = {"OFUGLB": "red", "OFUGLB-e": "orange", "EVILL": "magenta", "EMK": "blue", "GLOC": "yellow",
-                "RS-GLinCB": "black", "GLM-UCB": "brown",
-                "OFULogPlus": "green", "adaECOLog": "purple", "OFULog-r": "cyan",
-                "LogUCB1": "pink", "OL2M": "grey"}
+    color_dict = {"OFUGLB": "red", "OFUGLB-e": "orange", "EVILL": "brown", "EMK": "blue", "GLOC": "yellow",
+                  "RS-GLinCB": "black", "GLM-UCB": "magenta",
+                  "OFULogPlus": "green", "adaECOLog": "purple", "OFULog-r": "cyan",
+                  "LogUCB1": "pink", "OL2M": "grey"}
     ## color_dict proposed by Kwang
     # {"OFUGLB": "red", "EMK": "orange", "RS-GLinCB": "black", "GLOC": "green",
     #           "adaECOLog": "purple", "EVILL": "blue"}
