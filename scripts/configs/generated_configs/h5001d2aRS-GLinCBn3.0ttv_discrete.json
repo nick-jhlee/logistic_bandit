@@ -1,1 +1,0 @@
-{"repeat": 1, "horizon": 5001, "dim": 2, "algo_name": "RS-GLinCB", "theta_star": [2.1213203435596424, 2.1213203435596424], "param_norm_ub": 4, "failure_level": 0.05, "arm_set_type": "tv_discrete", "arm_set_size": 10, "arm_norm_ub": 1, "norm_theta_star": 3.0, "plot_confidence": true, "N_confidence": 1000, "tol": 1e-05, "seed": 9817, "theta_flag": null, "arm_option": null}

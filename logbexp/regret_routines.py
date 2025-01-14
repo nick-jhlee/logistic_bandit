@@ -88,7 +88,7 @@ def many_bandit_exps(config):
     seed_factory = ra.SeedSequence(config['seed'])
     seed_ary = seed_factory.generate_state(config['repeat'])
 
-    n_jobs=6
+    n_jobs = -1
     b_parallel = True # FIXME
     
     if config['repeat'] > 1:
