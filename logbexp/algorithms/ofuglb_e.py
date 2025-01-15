@@ -46,7 +46,7 @@ class OFUGLBe(LogisticBandit):
         self.lazy_update_fr = lazy_update_fr
         # initialize some learning attributes
         self.theta_hat = np.zeros((self.dim, 1))
-        self.l2reg = (1 + param_norm_ub) / (2 * param_norm_ub ** 2)
+        self.l2reg = 1 / (8 * param_norm_ub ** 2 * (1 + param_norm_ub))
         self.Ht = self.l2reg * np.eye(self.dim)
 
         self.ctr = 0

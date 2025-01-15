@@ -138,42 +138,77 @@ for row in range(3):
                         labels.append(tmp.get_label())
             axes[row, plt_idx].tick_params(axis='both', which='major', labelsize=tick_font_size)
             axes[row, plt_idx].tick_params(axis='both', which='minor', labelsize=tick_font_size)
-
             ## hard coding y-axis limits
-            if row == 0:
-                if S == 4:
-                    axes[row, plt_idx].set_ylim([0, 160])
-                    rect = Rectangle((0, 0), 4050, 35, linestyle='dashed', edgecolor='black',
-                                     facecolor='None', clip_on=False, linewidth=2.0)
-                    axes[row, plt_idx].add_patch(rect)
-                elif S == 6:
-                    axes[row, plt_idx].set_ylim([0, 200])
-                    rect = Rectangle((0, 0), 4050, 25, linestyle='dashed', edgecolor='black',
-                                     facecolor='None', clip_on=False, linewidth=2.0)
-                    axes[row, plt_idx].add_patch(rect)
-                elif S == 8:
-                    axes[row, plt_idx].set_ylim([0, 500])
-                    rect = Rectangle((0, 0), 4050, 20, linestyle='dashed', edgecolor='black',
-                                     facecolor='None', clip_on=False, linewidth=2.0)
-                    axes[row, plt_idx].add_patch(rect)
-                elif S == 10:
-                    axes[row, plt_idx].set_ylim([0, 1000])
-                    rect = Rectangle((0, 0), 4050, 15, linestyle='dashed', edgecolor='black',
-                                     facecolor='None', clip_on=False, linewidth=2.0)
-                    axes[row, plt_idx].add_patch(rect)
+            if arm_set_type == "tv_discrete":
+                if row == 0:
+                    if S == 4.0:
+                        axes[row, plt_idx].set_ylim([0, 500])
+                        rect = Rectangle((0, 0), 10050, 35, linestyle='dashed', edgecolor='black',
+                                        facecolor='None', clip_on=False, linewidth=2.0)
+                        axes[row, plt_idx].add_patch(rect)
+                    elif S == 6.0:
+                        axes[row, plt_idx].set_ylim([0, 400])
+                        rect = Rectangle((0, 0), 10050, 30, linestyle='dashed', edgecolor='black',
+                                        facecolor='None', clip_on=False, linewidth=2.0)
+                        axes[row, plt_idx].add_patch(rect)
+                    elif S == 8.0:
+                        axes[row, plt_idx].set_ylim([0, 300])
+                        rect = Rectangle((0, 0), 10050, 25, linestyle='dashed', edgecolor='black',
+                                        facecolor='None', clip_on=False, linewidth=2.0)
+                        axes[row, plt_idx].add_patch(rect)
+                    elif S == 10.0:
+                        axes[row, plt_idx].set_ylim([0, 200])
+                        rect = Rectangle((0, 0), 10050, 20, linestyle='dashed', edgecolor='black',
+                                        facecolor='None', clip_on=False, linewidth=2.0)
+                        axes[row, plt_idx].add_patch(rect)
+                    else:
+                        pass
                 else:
-                    pass
+                    if S == 4.0:
+                        axes[row, plt_idx].set_ylim([0, 35])
+                    elif S == 6.0:
+                        axes[row, plt_idx].set_ylim([0, 30])
+                    elif S == 8.0:
+                        axes[row, plt_idx].set_ylim([0, 25])
+                    elif S == 10.0:
+                        axes[row, plt_idx].set_ylim([0, 20])
+                    else:
+                        pass
             else:
-                if S == 4:
-                    axes[row, plt_idx].set_ylim([0, 31])
-                elif S == 6:
-                    axes[row, plt_idx].set_ylim([0, 23])
-                elif S == 8:
-                    axes[row, plt_idx].set_ylim([0, 17])
-                elif S == 10:
-                    axes[row, plt_idx].set_ylim([0, 11])
+                if row == 0:
+                    if S == 4.0:
+                        axes[row, plt_idx].set_ylim([0, 500])
+                        rect = Rectangle((0, 0), 10050, 80, linestyle='dashed', edgecolor='black',
+                                        facecolor='None', clip_on=False, linewidth=2.0)
+                        axes[row, plt_idx].add_patch(rect)
+                    elif S == 6.0:
+                        axes[row, plt_idx].set_ylim([0, 500])
+                        rect = Rectangle((0, 0), 10050, 70, linestyle='dashed', edgecolor='black',
+                                        facecolor='None', clip_on=False, linewidth=2.0)
+                        axes[row, plt_idx].add_patch(rect)
+                    elif S == 8.0:
+                        axes[row, plt_idx].set_ylim([0, 500])
+                        rect = Rectangle((0, 0), 10050, 60, linestyle='dashed', edgecolor='black',
+                                        facecolor='None', clip_on=False, linewidth=2.0)
+                        axes[row, plt_idx].add_patch(rect)
+                    elif S == 10.0:
+                        axes[row, plt_idx].set_ylim([0, 500])
+                        rect = Rectangle((0, 0), 10050, 50, linestyle='dashed', edgecolor='black',
+                                        facecolor='None', clip_on=False, linewidth=2.0)
+                        axes[row, plt_idx].add_patch(rect)
+                    else:
+                        pass
                 else:
-                    pass
+                    if S == 4.0:
+                        axes[row, plt_idx].set_ylim([0, 80])
+                    elif S == 6.0:
+                        axes[row, plt_idx].set_ylim([0, 70])
+                    elif S == 8.0:
+                        axes[row, plt_idx].set_ylim([0, 60])
+                    elif S == 10.0:
+                        axes[row, plt_idx].set_ylim([0, 50])
+                    else:
+                        pass
         ## plot confidence sets
         else:
             # basic quantities
@@ -181,7 +216,7 @@ for row in range(3):
             interact_rng = np.linspace(-S - 0.5, S + 0.5, N)
             x, y = np.meshgrid(interact_rng, interact_rng)
 
-            fnames = [f"h{H}d{d}a{algorithm}n{pn}t{arm_set_type}.npz" for algorithm in alg_dict.keys()]
+            fnames = [f"h{H+1}d{d}a{algorithm}n{pn}t{arm_set_type}.npz" for algorithm in alg_dict.keys()]
             # # label location for contourf
             # displacements = [(0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0)]
             # manual_locations = [[[(0.0, 0.0)], [(0.0, 0.0)], [(0.0, 0.0)], [(0.0, 0.0)]],
@@ -191,7 +226,7 @@ for row in range(3):
             # with sns.axes_style("whitegrid"):
             for i, fname in enumerate(fnames):
                 algorithm = list(alg_dict.keys())[i]
-                if algorithm not in ["OFUGLB", "OFUGLB-e", "EMK", "OFULogPlus", "OFULog-r"]:
+                if algorithm not in ["OFUGLB", "OFUGLB-e", "EMK", "OFULogPlus"]:
                     print(f"Algorithm {algorithm} not in the list of algorithms to plot. Skipping...")
                     continue
                 fname = f"{plot_dir}/{fname}"
@@ -239,6 +274,6 @@ for legobj in leg.legend_handles:
 
 fig.tight_layout()
 
-plt.savefig(f"logs/total_h{H}d{d}n{pn}t{arm_set_type}.pdf", dpi=400, bbox_inches='tight')
-plt.savefig(f"logs/total_h{H}d{d}n{pn}t{arm_set_type}.png", dpi=400, bbox_inches='tight')
-plt.show()
+plt.savefig(f"logs/total_h{H}d{d}t{arm_set_type}.pdf", dpi=400, bbox_inches='tight')
+plt.savefig(f"logs/total_h{H}d{d}t{arm_set_type}.png", dpi=400, bbox_inches='tight')
+# plt.show()
