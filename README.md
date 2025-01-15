@@ -110,7 +110,7 @@ optional arguments:
   -hz [HZ]    Horizon length (default: 2000)
   -pn [PN]            Parameter norm (default: 3.0)
   -ast [AST]          Dimension (default: tv_discrete)
-  -Nconfidence [N]    Number of discretizations (per axis) for confidence set plot (default: 2000)
+  -Nconfidence [N]    Number of discretizations (per axis) for confidence set plot (default: 1000)
   -algos [ALGOS [ALGOS ...]]    Algorithms with which we will plot the confidence set (default: ['OFUGLB', 'OFUGLB-e', 'EMK' ,'OFULogPlus'])
 ```
 
@@ -127,8 +127,8 @@ optional arguments:
   -d [D]      Dimension (default: 2)
   -hz [HZ]    Horizon length (default: 2000)
   -pn [PN]    Parameter norm (default: 3.0)
-  -ast [AST]  Dimension (default: tv_discrete)
-  -Nconfidence [N]    Number of discretizations (per axis) for confidence set plot (default: 2000)
+  -ast [AST]  Arm set type (default: tv_discrete)
+  -Nconfidence [N]    Number of discretizations (per axis) for confidence set plot (default: 1000)
 ```
 
 Example output:
